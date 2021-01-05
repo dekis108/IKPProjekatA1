@@ -23,7 +23,7 @@
 #pragma comment(lib,"WS2_32")
 
 
-void TCPSend(SOCKET connectSocket, Measurment measurment) {
+void TCPSendMeasurment(SOCKET connectSocket, Measurment measurment) {
     int iResult = send(connectSocket, (const char*)&measurment, sizeof(Measurment), 0);
     if (iResult == SOCKET_ERROR)
     {
@@ -34,7 +34,7 @@ void TCPSend(SOCKET connectSocket, Measurment measurment) {
 }
 
 
-Measurment TCPReceive(SOCKET connectSocket, int len) {
+Measurment TCPReceiveMeasurment(SOCKET connectSocket, int len) {
     Measurment* recvbuf = (Measurment*)malloc(sizeof(Measurment));
     int iResult = recv(connectSocket, (char*)recvbuf, len, 0);
     if (iResult > 0)

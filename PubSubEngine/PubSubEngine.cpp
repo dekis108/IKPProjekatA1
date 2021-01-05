@@ -1,20 +1,244 @@
-// PubSubEngine.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+#define _CRT_NONSTDC_NO_DEPRECATE
+#define _CRT_SECURE_NO_WARNINGS
 
-#include <iostream>
+#include <ws2tcpip.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+
+#include "../Common/LinkedList.h";
+#include "../Common/Measurment.h";
+#include "../TCPLib/TCPLib.cpp";
+
+#pragma comment(lib,"WS2_32")
+
+#define DEFAULT_BUFLEN 1000
+#define DEFAULT_PORT "27016"
+#define MAX_CLIENTS 10
+#define TIMEVAL_SEC 0
+#define TIMEVAL_USEC 0
+
+
+bool InitializeWindowsSockets();
+bool InitializeListenSocket();
+bool BindListenSocket();
+void SetNonBlocking();
+int Init();
+void Listen();
+void SetAcceptedSocketsInvalid();
+void ProcessMessages();
+
+
+fd_set readfds;
+SOCKET listenSocket = INVALID_SOCKET;
+SOCKET acceptedSockets[MAX_CLIENTS];
+addrinfo* resultingAddress = NULL;
+timeval timeVal;
+
 
 int main()
 {
-    std::cout << "Hello World!\n";
+	
+
+
+    int result = Init();
+    if (result) {
+        printf("ERROR CODE %d, press any key to exit\n", result);
+        getchar();
+        return result;
+    }
+
+    printf("Server live and ready to listen\n");
+    
+    Listen();
+    getchar();
+
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
 
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+int Init() {
+    //init_list(&listHead);
+
+    if (InitializeWindowsSockets() == false)
+    {
+        return 1;
+    }
+
+
+    if (InitializeListenSocket() == false) {
+        return 2;
+    }
+
+    if (BindListenSocket() == false) {
+        return 3;
+    }
+
+    freeaddrinfo(resultingAddress);
+
+    SetNonBlocking();
+
+    SetAcceptedSocketsInvalid();
+
+    return 0;
+}
+
+
+void Listen() {
+
+
+    int iResult = listen(listenSocket, SOMAXCONN);
+    if (iResult == SOCKET_ERROR)
+    {
+        printf("listen failed with error: %d\n", WSAGetLastError());
+        closesocket(listenSocket);
+        WSACleanup();
+        return;
+    }
+    printf("Listening...\n");
+
+
+    while (1)
+    {
+        FD_ZERO(&readfds);
+        FD_SET(listenSocket, &readfds);
+
+        for (int i = 0; i < MAX_CLIENTS; i++) {
+            if (acceptedSockets[i] != INVALID_SOCKET)
+                FD_SET(acceptedSockets[i], &readfds);
+        }
+
+        int value = select(0, &readfds, NULL, NULL, &timeVal);
+
+        if (value == 0) {
+            //pass...
+        }
+        else if (value == SOCKET_ERROR) {
+            //Greska prilikom poziva funkcije, odbaci sokete sa greskom
+            printf("select failed with error: %d\n", WSAGetLastError());
+            for (int i = 0; i < MAX_CLIENTS; i++) {
+                if (FD_ISSET(acceptedSockets[i], &readfds)) {
+                    closesocket(acceptedSockets[i]);
+                    acceptedSockets[i] = INVALID_SOCKET;
+                }
+                else if (i == MAX_CLIENTS) {
+                    closesocket(listenSocket);
+                    WSACleanup();
+                    return;
+                }
+            }
+        }
+        else { //accept event
+            if (FD_ISSET(listenSocket, &readfds)) {
+                for (int i = 0; i < MAX_CLIENTS; i++) {
+                    if (acceptedSockets[i] == INVALID_SOCKET) {
+                        acceptedSockets[i] = accept(listenSocket, NULL, NULL);
+                        if (acceptedSockets[i] == INVALID_SOCKET)
+                        {
+                            printf("accept failed with error: %d\n", WSAGetLastError());
+                            closesocket(listenSocket);
+                            WSACleanup();
+                            return;
+                        }
+
+                        break;
+                    }
+                }
+                //ako mu ne nadje mesto uradi nesto
+
+            }
+            else { //servis prima poruku
+                ProcessMessages();
+            }
+
+        }
+    }
+
+}
+
+
+void SetNonBlocking() {
+    unsigned long mode = 1;
+
+    int iResult = ioctlsocket(listenSocket, FIONBIO, &mode);
+
+    FD_ZERO(&readfds);
+
+    FD_SET(listenSocket, &readfds);
+
+    timeVal.tv_sec = TIMEVAL_SEC;
+    timeVal.tv_usec = TIMEVAL_USEC;
+}
+
+bool InitializeWindowsSockets()
+{
+    WSADATA wsaData;
+
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+    {
+        printf("WSAStartup failed with error: %d\n", WSAGetLastError());
+        return false;
+    }
+    return true;
+}
+
+bool InitializeListenSocket() {
+    addrinfo hints;
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_flags = AI_PASSIVE;
+
+    int iResult = getaddrinfo(NULL, DEFAULT_PORT, &hints, &resultingAddress);
+    if (iResult != 0)
+    {
+        printf("getaddrinfo failed with error: %d\n", iResult);
+        WSACleanup();
+        return false;
+    }
+
+    listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+    if (listenSocket == INVALID_SOCKET)
+    {
+        printf("socket failed with error: %ld\n", WSAGetLastError());
+        freeaddrinfo(resultingAddress);
+        WSACleanup();
+        return false;
+    }
+
+    return true;
+}
+
+bool BindListenSocket() {
+    int iResult = bind(listenSocket, resultingAddress->ai_addr, (int)resultingAddress->ai_addrlen);
+    if (iResult == SOCKET_ERROR)
+    {
+        printf("bind failed with error: %d\n", WSAGetLastError());
+        freeaddrinfo(resultingAddress);
+        closesocket(listenSocket);
+        WSACleanup();
+        return false;
+    }
+    return true;
+}
+
+void SetAcceptedSocketsInvalid() {
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+        acceptedSockets[i] = INVALID_SOCKET;
+    }
+}
+
+
+
+void ProcessMessages() {
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+        if (FD_ISSET(acceptedSockets[i], &readfds)) {
+            Measurment* newMeasurment = (Measurment*)malloc(sizeof(Measurment));
+            *newMeasurment = TCPReceiveMeasurment(acceptedSockets[i], DEFAULT_BUFLEN);
+
+            printf("%s %s %d", newMeasurment->topic, newMeasurment->type, newMeasurment->value);
+        }
+    }
+}
