@@ -26,6 +26,7 @@ bool InitializeWindowsSockets();
 bool CreateSocket();
 bool Connect();
 bool Publish();
+bool IntroduceMyself();
 
 SOCKET connectSocket = INVALID_SOCKET;
 sockaddr_in serverAddress;
@@ -73,7 +74,7 @@ bool  Publish() {
     }
     //Sleep(10);
     return true;
-}
+}   
 
 int Init() {
 
@@ -87,8 +88,24 @@ int Init() {
     if (Connect() == false) {
         return 3;
     }
-
+    if (IntroduceMyself() == false) {
+        return 4;
+    }
     return 0;
+}
+
+bool IntroduceMyself() {
+    //publisher se predstavi servisu
+    char introduction[11] = "publisher_";
+    int iResult = send(connectSocket, (const char*)introduction, 11, 0);
+    if (iResult == SOCKET_ERROR)
+    {
+        printf("send failed with error: %d\n", WSAGetLastError());
+        closesocket(connectSocket);
+        WSACleanup();
+        return false;
+    }
+    return true;
 }
 
 bool Connect() {

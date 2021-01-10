@@ -238,6 +238,20 @@ void ProcessMessages() {
             Measurment* newMeasurment = (Measurment*)malloc(sizeof(Measurment));
             *newMeasurment = TCPReceiveMeasurment(acceptedSockets[i], DEFAULT_BUFLEN);
 
+            //proveri da li je poruka predstavljanja
+            char introducment[11];
+            strcpy(introducment, (const char*)newMeasurment);
+            if (strcmp(introducment, "publisher_") == 0) {
+                //TODO:dodaj u listu publishers
+                printf("Connected client: publisher\n");
+                return;
+            }
+            else if (strcmp(introducment, "subscriber") == 0) {
+                //TODO:dodaj soket u listu subscribera
+                printf("Connected client: subscriber\n");
+                return;
+            }
+
             printf("%s %s %d", newMeasurment->topic, newMeasurment->type, newMeasurment->value);
         }
     }
