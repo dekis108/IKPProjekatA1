@@ -25,7 +25,8 @@ int Init();
 bool InitializeWindowsSockets();
 bool CreateSocket();
 bool Connect();
-bool Publish();
+bool Publish(Measurment *measurment);
+Measurment * GenerateMeasurment();
 bool IntroduceMyself();
 
 SOCKET connectSocket = INVALID_SOCKET;
@@ -45,7 +46,7 @@ int main()
     getchar();
     printf("Sending...\n");
 
-    if (Publish()) {
+    if (Publish(GenerateMeasurment())) {
         printf("Done, stopping..\n");
     }
     else {
@@ -56,15 +57,9 @@ int main()
 
 }
 
-bool  Publish() {
-    Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
+bool  Publish(Measurment *measurment) {
 
-    //TODO: generisanje vrednosti
-    msg->value = 13;
-    strcpy(msg->topic,"test1");
-    strcpy(msg->type,"test2");
-
-    int iResult = send(connectSocket, (const char*)msg, sizeof(Measurment), 0);
+    int iResult = send(connectSocket, (const char*)measurment, sizeof(Measurment), 0);
     if (iResult == SOCKET_ERROR)
     {
         printf("send failed with error: %d\n", WSAGetLastError());
@@ -75,6 +70,17 @@ bool  Publish() {
     //Sleep(10);
     return true;
 }   
+
+Measurment * GenerateMeasurment() {
+    Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
+
+    //TODO: generisanje vrednosti
+    msg->value = 13;
+    strcpy(msg->topic, "test1");
+    strcpy(msg->type, "test2");
+
+    return msg;
+}
 
 int Init() {
 
