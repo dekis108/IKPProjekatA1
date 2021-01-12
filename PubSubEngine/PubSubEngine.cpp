@@ -27,7 +27,7 @@ int Init();
 void Listen();
 void SetAcceptedSocketsInvalid();
 void ProcessMessages();
-
+void ProcessMeasurment(Measurment *);
 
 fd_set readfds;
 SOCKET listenSocket = INVALID_SOCKET;
@@ -255,7 +255,10 @@ void SetAcceptedSocketsInvalid() {
 
 
 /*
-* Calls TCPLib.TCPReceiveMeasurment and processes the message.
+* Checks accepted sockets that raised an event and 
+* calls TCPLib.TCPReceiveMeasurment to processes the message. 
+* Fills publishers and subrscribers list for introducment messages and calls
+* ProccessMeasurment for processing data.
 */
 void ProcessMessages() {
     for (int i = 0; i < MAX_CLIENTS; i++) {
@@ -267,17 +270,25 @@ void ProcessMessages() {
             char introducment[11];
             strcpy(introducment, (const char*)newMeasurment);
             if (strcmp(introducment, "publisher_") == 0) {
-                //LISTInputElementAtStart(&publisherList, acceptedSockets[i] )
+                //LISTInputElementAtStart(&publisherList, acceptedSockets[i] );
                 printf("Connected client: publisher\n");
                 return;
             }
             else if (strcmp(introducment, "subscriber") == 0) {
-                //TODO:dodaj soket u listu subscribera
+                //LISTInputElementAtStart(&subscriberList, acceptedSockets[i]);
                 printf("Connected client: subscriber\n");
                 return;
             }
 
-            printf("%s %s %d", newMeasurment->topic, newMeasurment->type, newMeasurment->value);
+            //else message is Measurment data
+            ProcessMeasurment(newMeasurment);
         }
     }
+}
+
+/*
+* 
+*/
+void ProcessMeasurment(Measurment *m) {
+    printf("[DEBUG] %s %s %d", m->topic, m->type, m->value);
 }
