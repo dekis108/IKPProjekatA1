@@ -11,6 +11,7 @@
 #include <conio.h>
 
 #include "../Common/Measurment.h";
+#include "../TCPLib/TCPLib.cpp";
 
 #pragma comment(lib,"WS2_32")
 
@@ -25,8 +26,7 @@ int Init();
 bool InitializeWindowsSockets();
 bool CreateSocket();
 bool Connect();
-bool Publish(Measurment *measurment);
-Measurment * GenerateMeasurment();
+Measurment GenerateMeasurment();
 bool IntroduceMyself();
 
 SOCKET connectSocket = INVALID_SOCKET;
@@ -46,7 +46,7 @@ int main()
     getchar();
     printf("Sending...\n");
 
-    if (Publish(GenerateMeasurment())) {
+    if (TCPSendMeasurment(connectSocket,GenerateMeasurment())) {
         printf("Done, stopping..\n");
     }
     else {
@@ -57,21 +57,8 @@ int main()
 
 }
 
-bool  Publish(Measurment *measurment) {
 
-    int iResult = send(connectSocket, (const char*)measurment, sizeof(Measurment), 0);
-    if (iResult == SOCKET_ERROR)
-    {
-        printf("send failed with error: %d\n", WSAGetLastError());
-        closesocket(connectSocket);
-        WSACleanup();
-        return false;
-    }
-    //Sleep(10);
-    return true;
-}   
-
-Measurment * GenerateMeasurment() {
+Measurment GenerateMeasurment() {
     Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
 
     //TODO: generisanje vrednosti
@@ -79,7 +66,7 @@ Measurment * GenerateMeasurment() {
     strcpy(msg->topic, "test1");
     strcpy(msg->type, "test2");
 
-    return msg;
+    return *msg;
 }
 
 int Init() {

@@ -23,14 +23,16 @@
 #pragma comment(lib,"WS2_32")
 
 
-void TCPSendMeasurment(SOCKET connectSocket, Measurment measurment) {
+bool TCPSendMeasurment(SOCKET connectSocket, Measurment measurment) {
     int iResult = send(connectSocket, (const char*)&measurment, sizeof(Measurment), 0);
     if (iResult == SOCKET_ERROR)
     {
         printf("send failed with error: %d\n", WSAGetLastError());
-        //closesocket(connectSocket);
-        //WSACleanup();
+        closesocket(connectSocket);
+        WSACleanup();
+        return false;
     }
+    return true;
 }
 
 
