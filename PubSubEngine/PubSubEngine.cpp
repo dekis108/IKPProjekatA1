@@ -55,7 +55,9 @@ int main()
 
 }
 
-
+/*
+* Initialises the service and setups listen and accepted sockets.
+*/
 int Init() {
     //init_list(&listHead);
 
@@ -83,6 +85,9 @@ int Init() {
 }
 
 
+/*
+* After the serice is initialised, enter the listening state.
+*/
 void Listen() {
 
 
@@ -156,6 +161,9 @@ void Listen() {
 }
 
 
+/*
+* Set up the socket to accept non-blocking TCP mode.
+*/
 void SetNonBlocking() {
     unsigned long mode = 1;
 
@@ -169,6 +177,9 @@ void SetNonBlocking() {
     timeVal.tv_usec = TIMEVAL_USEC;
 }
 
+/*
+* WSA initialiser.
+*/
 bool InitializeWindowsSockets()
 {
     WSADATA wsaData;
@@ -181,6 +192,9 @@ bool InitializeWindowsSockets()
     return true;
 }
 
+/*
+* Sets up listening socket.
+*/
 bool InitializeListenSocket() {
     addrinfo hints;
 
@@ -211,6 +225,9 @@ bool InitializeListenSocket() {
     return true;
 }
 
+/*
+* Binds listening socket with the configured address and port.
+*/
 bool BindListenSocket() {
     int iResult = bind(listenSocket, resultingAddress->ai_addr, (int)resultingAddress->ai_addrlen);
     if (iResult == SOCKET_ERROR)
@@ -224,6 +241,9 @@ bool BindListenSocket() {
     return true;
 }
 
+/*
+* Sets up accepted sockets to default (empty) value.
+*/
 void SetAcceptedSocketsInvalid() {
     for (int i = 0; i < MAX_CLIENTS; i++) {
         acceptedSockets[i] = INVALID_SOCKET;
@@ -231,7 +251,9 @@ void SetAcceptedSocketsInvalid() {
 }
 
 
-
+/*
+* Calls TCPLib.TCPReceiveMeasurment and processes the message.
+*/
 void ProcessMessages() {
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (FD_ISSET(acceptedSockets[i], &readfds)) {
