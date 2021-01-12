@@ -27,6 +27,7 @@ bool InitializeWindowsSockets();
 bool CreateSocket();
 bool Connect();
 Measurment GenerateMeasurment();
+Measurment CreateMeasurment();
 bool IntroduceMyself();
 
 SOCKET connectSocket = INVALID_SOCKET;
@@ -46,7 +47,8 @@ int main()
     getchar();
     printf("Sending...\n");
 
-    if (TCPSendMeasurment(connectSocket,GenerateMeasurment())) {
+   // if (TCPSendMeasurment(connectSocket,GenerateMeasurment())) {
+    if (TCPSendMeasurment(connectSocket,CreateMeasurment())) {
         printf("Done, stopping..\n");
     }
     else {
@@ -60,11 +62,68 @@ int main()
 
 Measurment GenerateMeasurment() {
     Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
+    enum MeasurmentTopic a = Analog;
+    srand(time(NULL));
+    msg->value = (rand() % 100) + 1; 
+    int topic = (rand() % 3) + 1;
+    int type = (rand() % 2) + 1;
+    switch (topic) {
+        case 0: 
+            msg->topic = Analog;
+            break;
+    
+        case 1: 
+            msg->topic = Status;
+            break;
+    }
+    switch (type) {
+        case 0:
+            msg->type = SWG;
+            break;
 
-    //TODO: generisanje vrednosti
-    msg->value = 13;
-    strcpy(msg->topic, "test1");
-    strcpy(msg->type, "test2");
+        case 1:
+            msg->type = CRB;
+            break;
+
+        case 2:
+            msg->type = MER;
+            break;
+    }
+
+    return *msg;
+}
+
+Measurment CreateMeasurment() {
+    Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
+
+    printf("Enter topic");
+    char topic[20];
+    scanf("%s", topic);
+    printf("Enter type");
+    char type[20];
+    scanf("%s", type);
+    printf("Enter value");
+    int val = 0;
+    scanf("%d", &val);
+
+    if (strcmp(topic, "Analog") == 0) {
+        msg->topic = Analog;
+    }
+    else if (strcmp(topic, "Status") == 0) {
+        msg->topic = Status;
+    }
+
+    if (strcmp(type, "SWG") == 0) {
+        msg->type = SWG;
+    }
+    else if (strcmp(type, "CRB") == 0) {
+        msg->type = CRB;
+    }
+    else if (strcmp(type, "MER") == 0) {
+        msg->type = MER;
+    }
+
+    msg->value = val;
 
     return *msg;
 }

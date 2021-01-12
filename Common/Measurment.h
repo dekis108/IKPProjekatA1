@@ -8,42 +8,41 @@
 #pragma once
 
 
-enum MeasurmentTopic {Analog = 0, Status};
-enum MeasurmentType {SWG = 0, CRB, MER};
+typedef enum MeasurmentTopic {Analog = 0, Status}Topic;
+typedef enum MeasurmentType {SWG = 0, CRB, MER}Type;
 
 typedef struct _msgFormat {
-    MeasurmentTopic topic;
-    MeasurmentType type;
+    Topic topic;
+    Type type;
     int value;
 
 }Measurment;
 
 
 //VISUAL STUDIO MI NE DA DISEM
-/*
-char* GetStringFromEnumHelper(MeasurmentTopic topic) {
-	//const char* strings[] = { "Analog", "Status" };
-	//return "Deja";
-	//return strings[topic];
+
+const char* GetStringFromEnumHelper(Topic topic) {
+	const char* strings[] = { "Analog", "Status" };
+	return strings[topic];
 }
 
-*/
 
-/*
-char* GetStringFromEnumHelper(MeasurmentType type) {
+char* GetStringFromEnumHelper(Type type) {
+	char* retVal = (char *)malloc(50);
 	switch (type)
 	{
 	case SWG:
-		char returnValue1[] = "SWG";
-		return returnValue1;
+		strcpy(retVal, "SWG");
+		break;
 	case CRB:
-		char returnValue2[] = "CRB";
-		return returnValue2;
+		strcpy(retVal, "CRB");
+		break;
 	case MER:
-		char returnValue3[] = "MER";
-		return returnValue3;
+		strcpy(retVal, "MER");
+		break;
 	default:
-		char returnValue4[] = "StringFromEnumHelper not updated for this value";
-		return returnValue4;
+		strcpy(retVal, "StringFromEnumHelper not updated for this value");
+		break;
 	}
-}*/
+	return retVal;
+}
