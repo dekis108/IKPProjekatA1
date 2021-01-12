@@ -28,8 +28,8 @@ bool TCPSendMeasurment(SOCKET connectSocket, Measurment measurment) {
     if (iResult == SOCKET_ERROR)
     {
         printf("send failed with error: %d\n", WSAGetLastError());
-        closesocket(connectSocket);
-        WSACleanup();
+        //closesocket(connectSocket);
+        //WSACleanup();
         return false;
     }
     return true;
