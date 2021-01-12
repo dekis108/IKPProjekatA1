@@ -291,4 +291,5 @@ void ProcessMessages() {
 */
 void ProcessMeasurment(Measurment *m) {
     printf("[DEBUG] %s %s %d", m->topic, m->type, m->value);
+
 }

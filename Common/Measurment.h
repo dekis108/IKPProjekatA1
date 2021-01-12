@@ -7,11 +7,13 @@
 
 #pragma once
 
-#define STRING_LENGHT 10
+
+enum MeasurmentTopic {Analog = 0, Status};
+enum MeasurmentType {SWG = 0, CRB, MER};
 
 typedef struct _msgFormat {
-    char topic[STRING_LENGHT];
-    char type[STRING_LENGHT];
+    MeasurmentTopic topic;
+    MeasurmentType type;
     int value;
 
 }Measurment;
