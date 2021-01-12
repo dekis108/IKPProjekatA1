@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include "../Common/LinkedList.h";
+#include "../Common/GenericList.h";
 #include "../Common/Measurment.h";
 #include "../TCPLib/TCPLib.cpp";
 
@@ -38,8 +39,6 @@ timeval timeVal;
 
 int main()
 {
-	
-
 
     int result = Init();
     if (result) {
