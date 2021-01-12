@@ -35,6 +35,9 @@ SOCKET acceptedSockets[MAX_CLIENTS];
 addrinfo* resultingAddress = NULL;
 timeval timeVal;
 
+LIST *publisherList = NULL;
+LIST *subscriberList = NULL;
+
 
 int main()
 {
@@ -264,7 +267,7 @@ void ProcessMessages() {
             char introducment[11];
             strcpy(introducment, (const char*)newMeasurment);
             if (strcmp(introducment, "publisher_") == 0) {
-                //TODO:dodaj u listu publishers
+                //LISTInputElementAtStart(&publisherList, acceptedSockets[i] )
                 printf("Connected client: publisher\n");
                 return;
             }
