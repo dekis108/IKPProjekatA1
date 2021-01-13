@@ -19,8 +19,9 @@ typedef struct _msgFormat {
 }Measurment;
 
 
-//VISUAL STUDIO MI NE DA DISEM
-
+/*
+* Get string representation from enum object, can't do it better in c.
+*/
 const char* GetStringFromEnumHelper(Topic topic) {
 	const char* strings[] = { "Analog", "Status" };
 	return strings[topic];
@@ -31,3 +32,14 @@ const char* GetStringFromEnumHelper(Type type) {
 	const char* strings[] = { "SWG", "CRB", "MER" };
 	return strings[type];
 }
+
+
+/*
+* Print measurment struct, specifically to be used by the generic list.
+*/
+void PrintMeasurment(void* m) {
+    Measurment* mes = (Measurment*)m;
+    printf("Measurment: ");
+    printf(" %s %s %d\n", GetStringFromEnumHelper(mes->topic), GetStringFromEnumHelper(mes->type), mes->value);
+}
+

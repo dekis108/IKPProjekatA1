@@ -289,8 +289,10 @@ void ProcessMessages() {
 * 
 */
 void ProcessMeasurment(Measurment *m) {
+    /*
     const char* topic = GetStringFromEnumHelper(m->topic);
     const char* type = GetStringFromEnumHelper(m->type);
     printf("[DEBUG] %s %s %d\n", topic, type, m->value);
-
+    */
+    PrintMeasurment(m);
 }

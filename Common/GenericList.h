@@ -46,13 +46,4 @@ void PrintGenericList(NODE * node, void (*fptr)(void*))
     }
 }
 
-/*
-void PrintMeasurment(void* m) {
-    Measurment* mes = (Measurment*)m;
-    printf("Measurment: ");
-    printf(" %s ", mes->topic);
-    printf(" %s ", mes->type);
-    printf(" %d \n", mes->value);
-}
-*/
 
