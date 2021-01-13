@@ -28,7 +28,7 @@ int Init();
 void Listen();
 void SetAcceptedSocketsInvalid();
 void ProcessMessages();
-void ProcessMeasurment(Measurment);
+void ProcessMeasurment(Measurment*);
 
 fd_set readfds;
 SOCKET listenSocket = INVALID_SOCKET;
@@ -280,7 +280,7 @@ void ProcessMessages() {
             }
 
             //else message is Measurment data
-            ProcessMeasurment(*newMeasurment);
+            ProcessMeasurment(newMeasurment);
         }
     }
 }
@@ -288,9 +288,9 @@ void ProcessMessages() {
 /*
 * 
 */
-void ProcessMeasurment(Measurment m) {
-    const char* topic = GetStringFromEnumHelper(m.topic);
-    char* type = GetStringFromEnumHelper(m.type);
-    printf("[DEBUG] %s %s %d", topic, type, m.value);
+void ProcessMeasurment(Measurment *m) {
+    const char* topic = GetStringFromEnumHelper(m->topic);
+    char* type = GetStringFromEnumHelper(m->type);
+    printf("[DEBUG] %s %s %d", topic, type, m->value);
 
 }
