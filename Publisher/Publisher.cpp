@@ -12,6 +12,7 @@
 
 #include "../Common/Measurment.h";
 #include "../TCPLib/TCPLib.cpp";
+#include "../Common/MessageTypes.h"
 
 #pragma comment(lib,"WS2_32")
 
@@ -26,7 +27,7 @@ int Init();
 bool InitializeWindowsSockets();
 bool CreateSocket();
 bool Connect();
-Measurment GenerateMeasurment();
+void * GenerateMeasurment();
 Measurment CreateMeasurment();
 bool IntroduceMyself();
 
@@ -47,7 +48,7 @@ int main()
     getchar();
     printf("Sending...\n");
 
-    if (TCPSendMeasurment(connectSocket,GenerateMeasurment())) {
+    if (TCPSendData(connectSocket,Data , GenerateMeasurment())) {
     //if (TCPSendMeasurment(connectSocket,CreateMeasurment())) {
         printf("Done, stopping..\n");
     }
@@ -60,7 +61,7 @@ int main()
 }
 
 
-Measurment GenerateMeasurment() {
+void * GenerateMeasurment() {
     Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
     enum MeasurmentTopic a = Analog;
     srand(time(NULL));
@@ -90,7 +91,7 @@ Measurment GenerateMeasurment() {
             break;
     }
 
-    return *msg;
+    return msg;
 }
 
 Measurment CreateMeasurment() {

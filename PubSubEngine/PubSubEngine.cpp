@@ -9,11 +9,12 @@
 //#include "../Common/LinkedList.h";
 #include "../Common/GenericList.h";
 #include "../Common/Measurment.h";
+#include "../Common/MessageTypes.h"
 #include "../TCPLib/TCPLib.cpp";
 
 #pragma comment(lib,"WS2_32")
 
-#define DEFAULT_BUFLEN 1000
+#define DEFAULT_BUFLEN 100
 #define DEFAULT_PORT "27016"
 #define MAX_CLIENTS 10
 #define TIMEVAL_SEC 0
@@ -263,10 +264,23 @@ void SetAcceptedSocketsInvalid() {
 void ProcessMessages() {
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (FD_ISSET(acceptedSockets[i], &readfds)) {
-            Measurment* newMeasurment = (Measurment*)malloc(sizeof(Measurment));
-            *newMeasurment = TCPReceiveMeasurment(acceptedSockets[i], DEFAULT_BUFLEN);
+            char *recvbuff = TCPReceiveData(acceptedSockets[i]);
+
+            if (recvbuff[0] == Data) {
+
+
+                printf("tu sam 1\n");
+            }
+            else if (recvbuff[0] == Introduction) {
+
+                printf("tu sam 2\n");
+            }
+            else {
+                printf("tu sam 3\n");
+            }
 
             //proveri da li je poruka predstavljanja
+            /*
             char introducment[11];
             strcpy(introducment, (const char*)newMeasurment);
             if (strcmp(introducment, "publisher_") == 0) {
@@ -279,12 +293,14 @@ void ProcessMessages() {
                 printf("Connected client: subscriber\n");
                 return;
             }
-
+            */
             //else message is Measurment data
-            ProcessMeasurment(newMeasurment);
+
+
+            //ProcessMeasurment(newMeasurment);
         }
     }
-}
+}   
 
 /*
 * Save the measurment in the list corresponding to its type.
