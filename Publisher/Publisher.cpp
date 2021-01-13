@@ -47,8 +47,8 @@ int main()
     getchar();
     printf("Sending...\n");
 
-   // if (TCPSendMeasurment(connectSocket,GenerateMeasurment())) {
-    if (TCPSendMeasurment(connectSocket,CreateMeasurment())) {
+    if (TCPSendMeasurment(connectSocket,GenerateMeasurment())) {
+    //if (TCPSendMeasurment(connectSocket,CreateMeasurment())) {
         printf("Done, stopping..\n");
     }
     else {
@@ -65,8 +65,8 @@ Measurment GenerateMeasurment() {
     enum MeasurmentTopic a = Analog;
     srand(time(NULL));
     msg->value = (rand() % 100) + 1; 
-    int topic = (rand() % 3) + 1;
-    int type = (rand() % 2) + 1;
+    int topic = (rand() % 2);
+    int type = (rand() % 3);
     switch (topic) {
         case 0: 
             msg->topic = Analog;
@@ -95,7 +95,8 @@ Measurment GenerateMeasurment() {
 
 Measurment CreateMeasurment() {
     Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
-
+    /*
+    
     printf("Enter topic");
     char topic[20];
     scanf("%s", topic);
@@ -124,6 +125,11 @@ Measurment CreateMeasurment() {
     }
 
     msg->value = val;
+    */
+
+    msg->topic = Analog;
+    msg->type = CRB;
+    msg->value = 15;
 
     return *msg;
 }
