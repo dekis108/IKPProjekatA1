@@ -27,22 +27,7 @@ const char* GetStringFromEnumHelper(Topic topic) {
 }
 
 
-char* GetStringFromEnumHelper(Type type) {
-	char* retVal = (char *)malloc(50);
-	switch (type)
-	{
-	case SWG:
-		strcpy(retVal, "SWG");
-		break;
-	case CRB:
-		strcpy(retVal, "CRB");
-		break;
-	case MER:
-		strcpy(retVal, "MER");
-		break;
-	default:
-		strcpy(retVal, "StringFromEnumHelper not updated for this value");
-		break;
-	}
-	return retVal;
+const char* GetStringFromEnumHelper(Type type) {
+	const char* strings[] = { "SWG", "CRB", "MER" };
+	return strings[type];
 }

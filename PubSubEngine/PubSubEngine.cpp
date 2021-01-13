@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "../Common/LinkedList.h";
+//#include "../Common/LinkedList.h";
 #include "../Common/GenericList.h";
 #include "../Common/Measurment.h";
 #include "../TCPLib/TCPLib.cpp";
@@ -36,8 +36,8 @@ SOCKET acceptedSockets[MAX_CLIENTS];
 addrinfo* resultingAddress = NULL;
 timeval timeVal;
 
-LIST *publisherList = NULL;
-LIST *subscriberList = NULL;
+NODE *publisherList = NULL;
+NODE *subscriberList = NULL;
 
 
 int main()
@@ -269,12 +269,12 @@ void ProcessMessages() {
             char introducment[11];
             strcpy(introducment, (const char*)newMeasurment);
             if (strcmp(introducment, "publisher_") == 0) {
-                //LISTInputElementAtStart(&publisherList, acceptedSockets[i] );
+                GenericListPushAtStart(&publisherList, &acceptedSockets[i], sizeof(SOCKET));
                 printf("Connected client: publisher\n");
                 return;
             }
             else if (strcmp(introducment, "subscriber") == 0) {
-                //LISTInputElementAtStart(&subscriberList, acceptedSockets[i]);
+                GenericListPushAtStart(&subscriberList, &acceptedSockets[i], sizeof(SOCKET));
                 printf("Connected client: subscriber\n");
                 return;
             }
@@ -290,7 +290,7 @@ void ProcessMessages() {
 */
 void ProcessMeasurment(Measurment *m) {
     const char* topic = GetStringFromEnumHelper(m->topic);
-    char* type = GetStringFromEnumHelper(m->type);
-    printf("[DEBUG] %s %s %d", topic, type, m->value);
+    const char* type = GetStringFromEnumHelper(m->type);
+    printf("[DEBUG] %s %s %d\n", topic, type, m->value);
 
 }
