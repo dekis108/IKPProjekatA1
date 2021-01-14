@@ -28,6 +28,8 @@ bool CreateSocket();
 bool Connect();
 bool IntroduceMyself();
 void Subscribe(MeasurmentTopic);
+void Recieve();
+void SendTopic();
 
 SOCKET connectSocket = INVALID_SOCKET;
 sockaddr_in serverAddress;
@@ -42,15 +44,37 @@ int main()
         return result;
     }
 
-    printf("Client initialised. Press enter recieve\n");
-    getchar();
-    printf("Sending...\n");
+    printf("Client initialised.\n");
 
-    Measurment m = TCPReceive(connectSocket);
+    SendTopic();
+
+    Recieve();
+
+    getchar();
+
+}
+
+void SendTopic() {
+    printf("Enter the topic you want to subscribe to (analog,status): \n");
+    char topic[7];
+    scanf("%s", topic);
+    if (strcmp(topic, "status") == 0) {
+        TCPSend(connectSocket, (char*)"s");
+    }
+    else if (strcmp(topic, "analog") == 0) {
+        TCPSend(connectSocket, (char*)"a");
+    }
+    else {
+        printf("Please, enter a valid topic");
+    }
+}
+
+//primi i ispisi
+void Recieve() {
+    char* measurment_bytes = TCPReceive(connectSocket, sizeof(Measurment));
+    Measurment* m = (Measurment*)malloc(sizeof(Measurment));
+    memcpy(m, measurment_bytes, sizeof(Measurment));
     PrintMeasurment(&m);
-
-    getchar();
-
 }
 
 void Subscribe(MeasurmentTopic topic) {
@@ -77,10 +101,8 @@ int Init() {
 
 bool IntroduceMyself() {
     //subs se predstavi servisu
-    char introduction[11] = "subscriber";
-    Measurment* msm = (Measurment*)malloc(sizeof(Measurment));
-    memcpy(msm, introduction, 11);
-    return TCPSendMeasurment(connectSocket, *msm);
+    char introducment[2] = "d";
+    return TCPSend(connectSocket, introducment);
 }
 
 bool Connect() {

@@ -271,10 +271,16 @@ void ProcessMessages() {
                 printf("Connected client: publisher\n");
                 return;
             }
-            else if (data[0] == 's') {
+            else if (data[0] == 'd') {
                 GenericListPushAtStart(&subscriberList, &acceptedSockets[i], sizeof(SOCKET));
                 printf("Connected client: subscriber\n");
                 return;
+            }
+            else if (data[0] == 'a') {
+                //TODO subscriber subscribed to analog topic
+            }
+            else if (data[0] == 's') {
+                //TODO subscriber subscribed to status topic
             }
 
             //else message is Measurment data
