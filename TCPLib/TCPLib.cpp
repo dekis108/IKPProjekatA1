@@ -23,8 +23,12 @@
 #pragma comment(lib,"WS2_32")
 
 
-bool TCPSendMeasurment(SOCKET connectSocket, Measurment measurment) {
-    int iResult = send(connectSocket, (const char*)&measurment, sizeof(Measurment), 0);
+bool TCPSend(SOCKET connectSocket, Measurment measurment) {
+    char* data = (char*)malloc(sizeof(Measurment));
+    memcpy(data, (const void *)&measurment, sizeof(Measurment));
+    int iResult = send(connectSocket, data, sizeof(Measurment), 0);
+    //free(data); //zasto puca?
+    //free(&measurment);
     if (iResult == SOCKET_ERROR)
     {
         printf("send failed with error: %d\n", WSAGetLastError());
@@ -36,17 +40,36 @@ bool TCPSendMeasurment(SOCKET connectSocket, Measurment measurment) {
 }
 
 
-Measurment TCPReceiveMeasurment(SOCKET connectSocket) {
-    Measurment* recvbuf = (Measurment*)malloc(sizeof(Measurment));
-    int iResult = recv(connectSocket, (char*)recvbuf, sizeof(Measurment), 0);
+bool TCPSend(SOCKET connectSocket, char key) {
+    int iResult = send(connectSocket, (const char*)key, sizeof(char), 0);
+    if (iResult == SOCKET_ERROR)
+    {
+        printf("send failed with error: %d\n", WSAGetLastError());
+        //closesocket(connectSocket);
+        //WSACleanup();
+        return false;
+    }
+    return true;
+}
+
+
+
+char *TCPReceive(SOCKET connectSocket, size_t len) {
+    //Measurment* recvbuf = (Measurment*)malloc(sizeof(Measurment));
+    char* recvbuf = (char*)malloc(sizeof(len));
+    //Measurment* data = (Measurment*)malloc(sizeof(Measurment));
+
+    int iResult = recv(connectSocket, (char*)recvbuf, len, 0);
     if (iResult > 0)
     {
         //printf("Msg value: %d\n", recvbuf->value);
+        
+        //memcpy(data, recvbuf, sizeof(Measurment));
     }
     else
     {
         // there was an error during recv
         printf("recv failed with error: %d\n", WSAGetLastError());
     }
-    return *recvbuf;
+    return recvbuf;
 }
