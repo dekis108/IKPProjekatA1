@@ -36,9 +36,9 @@ bool TCPSendMeasurment(SOCKET connectSocket, Measurment measurment) {
 }
 
 
-Measurment TCPReceiveMeasurment(SOCKET connectSocket, int len) {
+Measurment TCPReceiveMeasurment(SOCKET connectSocket) {
     Measurment* recvbuf = (Measurment*)malloc(sizeof(Measurment));
-    int iResult = recv(connectSocket, (char*)recvbuf, len, 0);
+    int iResult = recv(connectSocket, (char*)recvbuf, sizeof(Measurment), 0);
     if (iResult > 0)
     {
         //printf("Msg value: %d\n", recvbuf->value);

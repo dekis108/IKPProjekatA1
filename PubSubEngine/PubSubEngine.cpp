@@ -264,7 +264,7 @@ void ProcessMessages() {
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (FD_ISSET(acceptedSockets[i], &readfds)) {
             Measurment* newMeasurment = (Measurment*)malloc(sizeof(Measurment));
-            *newMeasurment = TCPReceiveMeasurment(acceptedSockets[i], DEFAULT_BUFLEN);
+            *newMeasurment = TCPReceiveMeasurment(acceptedSockets[i]);
 
             //proveri da li je poruka predstavljanja
             char introducment[11];
