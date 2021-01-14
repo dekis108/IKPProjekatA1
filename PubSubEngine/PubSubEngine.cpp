@@ -263,12 +263,11 @@ void SetAcceptedSocketsInvalid() {
 void ProcessMessages() {
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (FD_ISSET(acceptedSockets[i], &readfds)) {
-            Measurment* newMeasurment = (Measurment*)malloc(sizeof(Measurment));
-            *newMeasurment = TCPReceiveMeasurment(acceptedSockets[i], DEFAULT_BUFLEN);
+            char *data  = TCPReceive(acceptedSockets[i], sizeof(Measurment));
 
             //proveri da li je poruka predstavljanja
             char introducment[11];
-            strcpy(introducment, (const char*)newMeasurment);
+            strcpy(introducment, (const char*)data);
             if (strcmp(introducment, "publisher_") == 0) {
                 GenericListPushAtStart(&publisherList, &acceptedSockets[i], sizeof(SOCKET));
                 printf("Connected client: publisher\n");
@@ -281,6 +280,10 @@ void ProcessMessages() {
             }
 
             //else message is Measurment data
+            Measurment *newMeasurment = (Measurment*)malloc(sizeof(Measurment));
+            memcpy(newMeasurment, data, sizeof(Measurment));
+            //data treba free?
+            free(data); //zasto ovo puca?
             ProcessMeasurment(newMeasurment);
         }
     }

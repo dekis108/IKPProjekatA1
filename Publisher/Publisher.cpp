@@ -47,7 +47,7 @@ int main()
     getchar();
     printf("Sending...\n");
 
-    if (TCPSendMeasurment(connectSocket,GenerateMeasurment())) {
+    if (TCPSend(connectSocket,GenerateMeasurment())) {
     //if (TCPSendMeasurment(connectSocket,CreateMeasurment())) {
         printf("Done, stopping..\n");
     }
