@@ -38,7 +38,8 @@ timeval timeVal;
 
 NODE *publisherList = NULL;
 NODE *subscriberList = NULL;
-
+NODE *statusData = NULL;
+NODE *analogData = NULL;
 
 int main()
 {
@@ -286,13 +287,23 @@ void ProcessMessages() {
 }
 
 /*
-* 
+* Save the measurment in the list corresponding to its type.
+* m = Measurment to be saved (by reference)
 */
 void ProcessMeasurment(Measurment *m) {
-    /*
-    const char* topic = GetStringFromEnumHelper(m->topic);
-    const char* type = GetStringFromEnumHelper(m->type);
-    printf("[DEBUG] %s %s %d\n", topic, type, m->value);
-    */
+    printf("[DEBUG] Service received: ");
     PrintMeasurment(m);
+
+    switch (m->topic)
+    {
+    case Analog:
+        GenericListPushAtStart(&analogData, m, sizeof(Measurment));
+        break;
+    case Status:
+        GenericListPushAtStart(&statusData, m, sizeof(Measurment));
+        break;
+    default:
+        printf("[ERROR] Topic %d not supported.", m->topic);
+        break;
+    }
 }
