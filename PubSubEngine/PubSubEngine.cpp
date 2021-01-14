@@ -283,7 +283,7 @@ void ProcessMessages() {
             Measurment *newMeasurment = (Measurment*)malloc(sizeof(Measurment));
             memcpy(newMeasurment, data, sizeof(Measurment));
             //data treba free?
-            free(data); //zasto ovo puca?
+            //free(data); //zasto ovo puca?
             ProcessMeasurment(newMeasurment);
         }
     }

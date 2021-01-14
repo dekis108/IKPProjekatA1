@@ -26,7 +26,7 @@
 bool TCPSend(SOCKET connectSocket, Measurment measurment) {
     char* data = (char*)malloc(sizeof(Measurment));
     memcpy(data, (const void *)&measurment, sizeof(Measurment));
-    int iResult = send(connectSocket, (const char*)&measurment, sizeof(Measurment), 0);
+    int iResult = send(connectSocket, data, sizeof(Measurment), 0);
     //free(data); //zasto puca?
     //free(&measurment);
     if (iResult == SOCKET_ERROR)
