@@ -40,7 +40,7 @@ bool TCPSend(SOCKET connectSocket, Measurment measurment) {
 }
 
 
-bool TCPSend(SOCKET connectSocket, char key) {
+bool TCPSend(SOCKET connectSocket, char *key) {
     int iResult = send(connectSocket, (const char*)key, sizeof(char), 0);
     if (iResult == SOCKET_ERROR)
     {

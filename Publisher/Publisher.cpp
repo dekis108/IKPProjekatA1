@@ -154,19 +154,8 @@ int Init() {
 
 bool IntroduceMyself() {
     //publisher se predstavi servisu
-    char introduction[11] = "publisher_";
-    /*int iResult = send(connectSocket, (const char*)introduction, 11, 0);
-    if (iResult == SOCKET_ERROR)
-    {
-        printf("send failed with error: %d\n", WSAGetLastError());
-        closesocket(connectSocket);
-        WSACleanup();
-        return false;
-    }
-    return true; */
-    Measurment * msm = (Measurment *)malloc(sizeof(Measurment));
-    memcpy(msm, introduction, 11);
-    return TCPSendMeasurment(connectSocket,* msm);
+    char introducment[2] = "p";
+    return TCPSend(connectSocket,introducment);
 }
 
 bool Connect() {

@@ -46,7 +46,7 @@ int main()
     getchar();
     printf("Sending...\n");
 
-    Measurment m = TCPReceiveMeasurment(connectSocket);
+    Measurment m = TCPReceive(connectSocket);
     PrintMeasurment(&m);
 
     getchar();

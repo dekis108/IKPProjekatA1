@@ -266,14 +266,12 @@ void ProcessMessages() {
             char *data  = TCPReceive(acceptedSockets[i], sizeof(Measurment));
 
             //proveri da li je poruka predstavljanja
-            char introducment[11];
-            strcpy(introducment, (const char*)data);
-            if (strcmp(introducment, "publisher_") == 0) {
+            if (data[0] == 'p') {
                 GenericListPushAtStart(&publisherList, &acceptedSockets[i], sizeof(SOCKET));
                 printf("Connected client: publisher\n");
                 return;
             }
-            else if (strcmp(introducment, "subscriber") == 0) {
+            else if (data[0] == 's') {
                 GenericListPushAtStart(&subscriberList, &acceptedSockets[i], sizeof(SOCKET));
                 printf("Connected client: subscriber\n");
                 return;
