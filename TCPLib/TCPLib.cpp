@@ -28,6 +28,7 @@ bool TCPSend(SOCKET connectSocket, Measurment measurment) {
     memcpy(data, (const void *)&measurment, sizeof(Measurment));
     int iResult = send(connectSocket, (const char*)&measurment, sizeof(Measurment), 0);
     //free(data); //zasto puca?
+    //free(&measurment);
     if (iResult == SOCKET_ERROR)
     {
         printf("send failed with error: %d\n", WSAGetLastError());
