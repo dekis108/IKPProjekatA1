@@ -263,7 +263,8 @@ void SetAcceptedSocketsInvalid() {
 void ProcessMessages() {
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (FD_ISSET(acceptedSockets[i], &readfds)) {
-            char *data  = TCPReceive(acceptedSockets[i], sizeof(Measurment));
+            char* data = (char*)malloc(sizeof(Measurment));
+            TCPReceive(acceptedSockets[i], data, sizeof(Measurment));
 
             //proveri da li je poruka predstavljanja
             if (data[0] == 'p') {
@@ -287,7 +288,7 @@ void ProcessMessages() {
             Measurment *newMeasurment = (Measurment*)malloc(sizeof(Measurment));
             memcpy(newMeasurment, data, sizeof(Measurment));
             //data treba free?
-            //free(data); //zasto ovo puca?
+            free(data); //zasto ovo puca?
             ProcessMeasurment(newMeasurment);
         }
     }
