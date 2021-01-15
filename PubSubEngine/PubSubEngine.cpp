@@ -30,6 +30,7 @@ void SetAcceptedSocketsInvalid();
 void ProcessMessages();
 void ProcessMeasurment(Measurment*);
 void Shutdown();
+void UpdateSubscribers(Measurment* m, NODE *list);
 
 fd_set readfds;
 SOCKET listenSocket = INVALID_SOCKET;
@@ -271,20 +272,21 @@ void ProcessMessages() {
             char* data = (char*)malloc(sizeof(Measurment));
             TCPReceive(acceptedSockets[i], data, sizeof(Measurment));
 
+            SOCKET* ptr = &acceptedSockets[i];
             //proveri da li je poruka predstavljanja
             if (data[0] == 'p') {
-                GenericListPushAtStart(&publisherList, &acceptedSockets[i], sizeof(SOCKET));
+                GenericListPushAtStart(&publisherList, ptr, sizeof(SOCKET));
                 printf("Connected client: publisher\n");
             }
             else if (data[0] == 'd') {
-                GenericListPushAtStart(&subscriberList, &acceptedSockets[i], sizeof(SOCKET));
+                GenericListPushAtStart(&subscriberList, ptr, sizeof(SOCKET));
                 printf("Connected client: subscriber\n");
             }
             else if (data[0] == 'a') {
-                GenericListPushAtStart(&analogSubscribers, &acceptedSockets[i], sizeof(SOCKET));
+                GenericListPushAtStart(&analogSubscribers, ptr, sizeof(SOCKET));
             }
             else if (data[0] == 's') {
-                GenericListPushAtStart(&statusSubscribers, &acceptedSockets[i], sizeof(SOCKET));
+                GenericListPushAtStart(&statusSubscribers, ptr, sizeof(SOCKET));
             }
             else {
                 //else message is Measurment data
@@ -311,9 +313,11 @@ void ProcessMeasurment(Measurment *m) {
     {
     case Analog:
         GenericListPushAtStart(&analogData, m, sizeof(Measurment));
+        UpdateSubscribers(m, analogSubscribers);
         break;
     case Status:
         GenericListPushAtStart(&statusData, m, sizeof(Measurment));
+        UpdateSubscribers(m, statusSubscribers);
         break;
     default:
         printf("[ERROR] Topic %d not supported.", m->topic);
@@ -338,4 +342,18 @@ void Shutdown() {
 
     printf("Service freed all memory.");
     getchar();
+}
+
+
+void UpdateSubscribers(Measurment* m, Node *list) {
+    Node* temp = list;
+    if (temp == NULL) {
+        return;
+    }
+    while (temp != NULL) {
+        SOCKET s;
+        memcpy(&s, temp->data, sizeof(SOCKET));
+        TCPSend(s, *m);
+        temp = temp->next;
+    }
 }
