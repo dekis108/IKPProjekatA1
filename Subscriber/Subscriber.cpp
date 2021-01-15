@@ -94,13 +94,15 @@ void SendTopic() {
 //primi i ispisi
 void Receive() {
     printf("Subscriber starting to receive:\n\n");
+    char* data = (char*)malloc(sizeof(Measurment));
     while (true) {
-        char* measurment = (char*)malloc(sizeof(Measurment));
-        TCPReceive(connectSocket, measurment, sizeof(Measurment));
-        PrintMeasurment(&measurment);
-        free(measurment);
+        TCPReceive(connectSocket, data, sizeof(Measurment));
+        Measurment* newMeasurment = (Measurment*)malloc(sizeof(Measurment));
+        memcpy(newMeasurment, data, sizeof(Measurment));
+        PrintMeasurment(newMeasurment);
+        free(newMeasurment);
+        Sleep(10);
     }
-    Sleep(10);
 }
 
 void Subscribe() {

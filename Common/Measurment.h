@@ -37,9 +37,8 @@ const char* GetStringFromEnumHelper(Type type) {
 /*
 * Print measurment struct, specifically to be used by the generic list.
 */
-void PrintMeasurment(void* m) {
-    Measurment* mes = (Measurment*)m;
+void PrintMeasurment(Measurment * m) {
     printf("Measurment: ");
-    printf(" %s %s %d\n", GetStringFromEnumHelper(mes->topic), GetStringFromEnumHelper(mes->type), mes->value);
+    printf(" %s %s %d\n", GetStringFromEnumHelper(m->topic), GetStringFromEnumHelper(m->type), m->value);
 }
 
