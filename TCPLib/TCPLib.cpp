@@ -27,7 +27,7 @@ bool TCPSend(SOCKET connectSocket, Measurment measurment) {
     char* data = (char*)malloc(sizeof(Measurment));
     memcpy(data, (const void *)&measurment, sizeof(Measurment));
     int iResult = send(connectSocket, (const char*)&measurment, sizeof(Measurment), 0);
-    //free(data); //zasto puca?
+    free(data); //zasto puca?
     //free(&measurment);
     if (iResult == SOCKET_ERROR)
     {
@@ -54,9 +54,9 @@ bool TCPSend(SOCKET connectSocket, char key) {
 
 
 
-char *TCPReceive(SOCKET connectSocket, size_t len) {
+bool TCPReceive(SOCKET connectSocket, char* recvbuf, size_t len) {
     //Measurment* recvbuf = (Measurment*)malloc(sizeof(Measurment));
-    char* recvbuf = (char*)malloc(sizeof(len));
+    //char* recvbuf = (char*)malloc(sizeof(len));
     //Measurment* data = (Measurment*)malloc(sizeof(Measurment));
 
     int iResult = recv(connectSocket, (char*)recvbuf, len, 0);
@@ -70,6 +70,7 @@ char *TCPReceive(SOCKET connectSocket, size_t len) {
     {
         // there was an error during recv
         printf("recv failed with error: %d\n", WSAGetLastError());
+        return false;
     }
-    return recvbuf;
+    return true;
 }
