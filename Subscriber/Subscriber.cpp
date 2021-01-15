@@ -28,7 +28,7 @@ bool CreateSocket();
 bool Connect();
 bool IntroduceMyself();
 void Subscribe(MeasurmentTopic);
-void Recieve();
+void Receive();
 void SendTopic();
 
 SOCKET connectSocket = INVALID_SOCKET;
@@ -48,7 +48,7 @@ int main()
 
     SendTopic();
 
-    Recieve();
+    Receive();
 
     getchar();
 
@@ -90,7 +90,7 @@ void SendTopic() {
 }
 
 //primi i ispisi
-void Recieve() {
+void Receive() {
     char* measurment = (char*)malloc(sizeof(Measurment));
     TCPReceive(connectSocket,measurment,sizeof(Measurment));
     PrintMeasurment(&measurment);
