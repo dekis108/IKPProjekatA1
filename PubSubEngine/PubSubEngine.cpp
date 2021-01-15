@@ -283,13 +283,14 @@ void ProcessMessages() {
             else if (data[0] == 's') {
                 //TODO subscriber subscribed to status topic
             }
-
-            //else message is Measurment data
-            Measurment *newMeasurment = (Measurment*)malloc(sizeof(Measurment));
-            memcpy(newMeasurment, data, sizeof(Measurment));
-            //data treba free?
-            free(data); //zasto ovo puca?
-            ProcessMeasurment(newMeasurment);
+            else {
+                //else message is Measurment data
+                Measurment* newMeasurment = (Measurment*)malloc(sizeof(Measurment));
+                memcpy(newMeasurment, data, sizeof(Measurment));
+                //data treba free?
+                free(data); //zasto ovo puca?
+                ProcessMeasurment(newMeasurment);
+            }
         }
     }
 }

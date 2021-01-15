@@ -55,26 +55,46 @@ int main()
 }
 
 void SendTopic() {
-    printf("Enter the topic you want to subscribe to (analog,status): \n");
     char topic[7];
-    scanf("%s", topic);
-    if (strcmp(topic, "status") == 0) {
-        TCPSend(connectSocket, (char*)"s");
-    }
-    else if (strcmp(topic, "analog") == 0) {
-        TCPSend(connectSocket, (char*)"a");
-    }
-    else {
-        printf("Please, enter a valid topic");
+    bool subs_status = false;
+    bool subs_analog = false;
+
+    while (true) {
+        printf("Enter the topic you want to subscribe to (analog,status). Enter 'end' to finnish.\n");
+        scanf("%s", topic);
+        if (strcmp(topic, "status") == 0) {
+            if (subs_status) {
+                continue;
+            }
+            char t[2] = "s";
+            TCPSend(connectSocket, t);
+            subs_status = true;
+            printf("You subscribed to : status \n");
+        }
+        else if (strcmp(topic, "analog") == 0) {
+            if (subs_analog) {
+                continue;
+            }
+            char t[2] = "a";
+            TCPSend(connectSocket, t);
+            subs_analog = true;
+            printf("You subscribed to : analog \n");
+        }
+        else if (strcmp(topic, "end") == 0) {
+            break;
+        }
+        else {
+            printf("Please, enter a valid topic. \n");
+        }
     }
 }
 
 //primi i ispisi
 void Recieve() {
-    char* measurment_bytes = TCPReceive(connectSocket, sizeof(Measurment));
-    Measurment* m = (Measurment*)malloc(sizeof(Measurment));
-    memcpy(m, measurment_bytes, sizeof(Measurment));
-    PrintMeasurment(&m);
+    char* measurment = (char*)malloc(sizeof(Measurment));
+    TCPReceive(connectSocket,measurment,sizeof(Measurment));
+    PrintMeasurment(&measurment);
+    free(measurment);
 }
 
 void Subscribe(MeasurmentTopic topic) {
