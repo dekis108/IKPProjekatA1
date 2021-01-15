@@ -41,6 +41,8 @@ NODE *publisherList = NULL;
 NODE *subscriberList = NULL;
 NODE *statusData = NULL;
 NODE *analogData = NULL;
+NODE *statusSubscribers = NULL;
+NODE *analogSubscribers = NULL;
 
 int meme = 0;
 
@@ -279,10 +281,10 @@ void ProcessMessages() {
                 printf("Connected client: subscriber\n");
             }
             else if (data[0] == 'a') {
-                //TODO subscriber subscribed to analog topic
+                GenericListPushAtStart(&analogSubscribers, &acceptedSockets[i], sizeof(SOCKET));
             }
             else if (data[0] == 's') {
-                //TODO subscriber subscribed to status topic
+                GenericListPushAtStart(&statusSubscribers, &acceptedSockets[i], sizeof(SOCKET));
             }
             else {
                 //else message is Measurment data
@@ -331,6 +333,8 @@ void Shutdown() {
     FreeGenericList(&subscriberList);
     FreeGenericList(&statusData);
     FreeGenericList(&analogData);
+    FreeGenericList(&statusSubscribers);
+    FreeGenericList(&analogSubscribers);
 
     printf("Service freed all memory.");
     getchar();
