@@ -29,6 +29,7 @@ bool Connect();
 Measurment *GenerateMeasurment();
 Measurment CreateMeasurment();
 bool IntroduceMyself();
+void SendMeasurment();
 
 SOCKET connectSocket = INVALID_SOCKET;
 sockaddr_in serverAddress;
@@ -43,21 +44,30 @@ int main()
         return result;
     }
 
-    printf("Client initialised. Press enter publish\n");
+    printf("Client initialised. Press enter to start publishing\n");
     getchar();
-    printf("Sending...\n");
-
-    Measurment* m = GenerateMeasurment();
-    if (TCPSend(connectSocket,*m)) {
-    //if (TCPSendMeasurment(connectSocket,CreateMeasurment())) {
-        printf("Done, stopping..\n");
-    }
-    else {
-        printf("An error occured\n");
-    }
-    free(m);
+    
+    SendMeasurment();
+    
     getchar();
 
+}
+
+void SendMeasurment() {
+    while (true) {
+        printf("Sending...\n");
+
+        Measurment* m = GenerateMeasurment();
+        if (TCPSend(connectSocket, *m)) {
+            //if (TCPSendMeasurment(connectSocket,CreateMeasurment())) {
+            printf("Sent: %s %s %d \n", GetStringFromEnumHelper(m->topic), GetStringFromEnumHelper(m->type), m->value);
+        }
+        else {
+            printf("An error occured\n");
+        }
+        free(m);
+        Sleep(1001);
+    }
 }
 
 
