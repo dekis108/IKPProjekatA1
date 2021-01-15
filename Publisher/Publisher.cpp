@@ -26,7 +26,7 @@ int Init();
 bool InitializeWindowsSockets();
 bool CreateSocket();
 bool Connect();
-Measurment GenerateMeasurment();
+Measurment *GenerateMeasurment();
 Measurment CreateMeasurment();
 bool IntroduceMyself();
 
@@ -47,20 +47,21 @@ int main()
     getchar();
     printf("Sending...\n");
 
-    if (TCPSend(connectSocket,GenerateMeasurment())) {
+    Measurment* m = GenerateMeasurment();
+    if (TCPSend(connectSocket,*m)) {
     //if (TCPSendMeasurment(connectSocket,CreateMeasurment())) {
         printf("Done, stopping..\n");
     }
     else {
         printf("An error occured\n");
     }
-
+    free(m);
     getchar();
 
 }
 
 
-Measurment GenerateMeasurment() {
+Measurment * GenerateMeasurment() {
     Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
     enum MeasurmentTopic a = Analog;
     srand(time(NULL));
@@ -90,7 +91,7 @@ Measurment GenerateMeasurment() {
             break;
     }
 
-    return *msg;
+    return msg;
 }
 
 Measurment CreateMeasurment() {
