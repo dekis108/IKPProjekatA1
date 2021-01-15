@@ -47,3 +47,25 @@ void PrintGenericList(NODE * node, void (*fptr)(void*))
 }
 
 
+/*
+* Frees all the memory taken by list.
+*/
+void FreeGenericList(NODE **head) {
+    if (*head == NULL) {
+        return;
+    }
+
+    NODE *next = (*head)->next;
+
+    free((*head)->data);
+    (*head)->data = NULL;
+    (*head)->next = NULL;
+    free(*head);
+    *head = NULL;
+
+    if (next != NULL) {
+        FreeGenericList(&next);
+    }
+}
+
+

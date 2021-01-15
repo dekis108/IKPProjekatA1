@@ -29,6 +29,7 @@ void Listen();
 void SetAcceptedSocketsInvalid();
 void ProcessMessages();
 void ProcessMeasurment(Measurment*);
+void Shutdown();
 
 fd_set readfds;
 SOCKET listenSocket = INVALID_SOCKET;
@@ -41,6 +42,8 @@ NODE *subscriberList = NULL;
 NODE *statusData = NULL;
 NODE *analogData = NULL;
 
+int meme = 0;
+
 int main()
 {
 
@@ -51,11 +54,11 @@ int main()
         return result;
     }
 
-    printf("Server live and ready to listen\n");
+    printf("Server live and ready to listen\n[DEBUG] Press any key to free all lists.\n");
     
     Listen();
     getchar();
-
+    Shutdown();
 }
 
 /*
@@ -270,12 +273,10 @@ void ProcessMessages() {
             if (data[0] == 'p') {
                 GenericListPushAtStart(&publisherList, &acceptedSockets[i], sizeof(SOCKET));
                 printf("Connected client: publisher\n");
-                return;
             }
             else if (data[0] == 'd') {
                 GenericListPushAtStart(&subscriberList, &acceptedSockets[i], sizeof(SOCKET));
                 printf("Connected client: subscriber\n");
-                return;
             }
             else if (data[0] == 'a') {
                 //TODO subscriber subscribed to analog topic
@@ -290,6 +291,7 @@ void ProcessMessages() {
                 //data treba free?
                 free(data); //zasto ovo puca?
                 ProcessMeasurment(newMeasurment);
+                free(newMeasurment);
             }
         }
     }
@@ -315,4 +317,21 @@ void ProcessMeasurment(Measurment *m) {
         printf("[ERROR] Topic %d not supported.", m->topic);
         break;
     }
+}
+
+
+void Shutdown() {
+    closesocket(listenSocket);
+    for (int i = 0; i < MAX_CLIENTS; ++i) {
+        closesocket(acceptedSockets[i]);
+    }
+    WSACleanup();
+
+    FreeGenericList(&publisherList);
+    FreeGenericList(&subscriberList);
+    FreeGenericList(&statusData);
+    FreeGenericList(&analogData);
+
+    printf("Service freed all memory.");
+    getchar();
 }
