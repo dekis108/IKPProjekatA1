@@ -27,7 +27,7 @@ bool InitializeWindowsSockets();
 bool CreateSocket();
 bool Connect();
 bool IntroduceMyself();
-void Subscribe(MeasurmentTopic);
+void Subscribe();
 void Receive();
 void SendTopic();
 
@@ -46,7 +46,7 @@ int main()
 
     printf("Client initialised.\n");
 
-    SendTopic();
+    Subscribe();
 
     Receive();
 
@@ -54,6 +54,7 @@ int main()
 
 }
 
+/*
 void SendTopic() {
     char topic[7];
     bool subs_status = false;
@@ -88,17 +89,41 @@ void SendTopic() {
         }
     }
 }
+*/
 
 //primi i ispisi
 void Receive() {
-    char* measurment = (char*)malloc(sizeof(Measurment));
-    TCPReceive(connectSocket,measurment,sizeof(Measurment));
-    PrintMeasurment(&measurment);
-    free(measurment);
+    printf("Subscriber starting to receive:\n\n");
+    while (true) {
+        char* measurment = (char*)malloc(sizeof(Measurment));
+        TCPReceive(connectSocket, measurment, sizeof(Measurment));
+        PrintMeasurment(&measurment);
+        free(measurment);
+    }
+    Sleep(10);
 }
 
-void Subscribe(MeasurmentTopic topic) {
-    //TODO
+void Subscribe() {
+    printf("1) Status\n2) Analog\n3) Both\nSelect: ");
+    char c = getchar();
+    char t1[2] = "s";
+    char t2[2] = "a";
+    switch (c)
+    {
+    case '1':
+        TCPSend(connectSocket, t1);
+        break;
+    case '2':
+        TCPSend(connectSocket, t2);
+        break;
+    case '3':
+        TCPSend(connectSocket, t1);
+        TCPSend(connectSocket, t2);
+        break;
+    default:
+        printf("\nBad input.\n");
+        Subscribe();
+    }
 }
 
 int Init() {
