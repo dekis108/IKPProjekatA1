@@ -19,13 +19,14 @@
 #define TIMEVAL_SEC 0
 #define TIMEVAL_USEC 0
 
+#define SAFE_DELETE_HANDLE(a)  if(a){CloseHandle(a);}
 
 bool InitializeWindowsSockets();
 bool InitializeListenSocket();
 bool BindListenSocket();
 void SetNonBlocking();
 int Init();
-void Listen();
+DWORD WINAPI Listen(LPVOID);
 void SetAcceptedSocketsInvalid();
 void ProcessMessages();
 void ProcessMeasurment(Measurment*);
@@ -39,6 +40,8 @@ SOCKET acceptedSockets[MAX_CLIENTS];
 addrinfo* resultingAddress = NULL;
 timeval timeVal;
 
+
+
 NODE *publisherList = NULL;
 NODE *subscriberList = NULL;
 NODE *statusData = NULL;
@@ -50,6 +53,8 @@ int meme = 0;
 
 int main()
 {
+    HANDLE listenHandle;
+    DWORD listenID;
 
     int result = Init();
     if (result) {
@@ -58,9 +63,14 @@ int main()
         return result;
     }
 
-    printf("Server live and ready to listen\n[DEBUG] Press any key to free all lists.\n");
+    printf("Server live and ready to listen\n");
     
-    Listen();
+    listenHandle = CreateThread(NULL, 0, &Listen, (LPVOID)0, 0, &listenID);
+    //Listen();
+    if (listenHandle) {
+        WaitForSingleObject(listenHandle, INFINITE);
+    }
+
     getchar();
     Shutdown();
 }
@@ -98,7 +108,7 @@ int Init() {
 /*
 * After the serice is initialised, enter the listening state.
 */
-void Listen() {
+DWORD WINAPI Listen(LPVOID param) {
 
 
     int iResult = listen(listenSocket, SOMAXCONN);
@@ -107,7 +117,7 @@ void Listen() {
         printf("listen failed with error: %d\n", WSAGetLastError());
         closesocket(listenSocket);
         WSACleanup();
-        return;
+        return 0;
     }
     printf("Listening...\n");
 
@@ -125,7 +135,7 @@ void Listen() {
         int value = select(0, &readfds, NULL, NULL, &timeVal);
 
         if (value == 0) {
-            //pass...
+            //pass
         }
         else if (value == SOCKET_ERROR) {
             //Greska prilikom poziva funkcije, odbaci sokete sa greskom
@@ -137,8 +147,8 @@ void Listen() {
                 }
                 else if (i == MAX_CLIENTS) {
                     closesocket(listenSocket);
-                    WSACleanup();
-                    return;
+                    //WSACleanup();
+                    return 0;
                 }
             }
         }
@@ -152,7 +162,7 @@ void Listen() {
                             printf("accept failed with error: %d\n", WSAGetLastError());
                             closesocket(listenSocket);
                             WSACleanup();
-                            return;
+                            return 0;
                         }
 
                         break;
@@ -383,6 +393,7 @@ void SendToNewSubscriber(SOCKET sub, NODE *dataHead) {
     while (temp != NULL) {
         memcpy(data, temp->data, sizeof(Measurment));
         TCPSend(sub, *data);
+        temp = temp->next;
     }
     free(data);
 }
