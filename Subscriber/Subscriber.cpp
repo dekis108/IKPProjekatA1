@@ -22,17 +22,32 @@
 #define TYPE_STRING_LENGHT 10
 #define DEMOTESTCOUNT 20
 
+
 int Init();
 bool InitializeWindowsSockets();
 bool CreateSocket();
 bool Connect();
 bool IntroduceMyself();
 void Subscribe();
-void Receive();
+//DWORD WINAPI Receive();
 void SendTopic();
 
 SOCKET connectSocket = INVALID_SOCKET;
 sockaddr_in serverAddress;
+
+//primi i ispisi
+DWORD WINAPI Receive(LPVOID param) {
+    //printf("Subscriber starting to receive:\n\n");
+    char* data = (char*)malloc(sizeof(Measurment));
+    while (true) {
+        TCPReceive(connectSocket, data, sizeof(Measurment));
+        Measurment* newMeasurment = (Measurment*)malloc(sizeof(Measurment));
+        memcpy(newMeasurment, data, sizeof(Measurment));
+        PrintMeasurment(newMeasurment);
+        free(newMeasurment);
+        Sleep(10);
+    }
+}
 
 
 int main()
@@ -48,7 +63,19 @@ int main()
 
     Subscribe();
 
-    Receive();
+   // Receive();
+    //Thread za Recieve
+    DWORD id , param = 1;
+    HANDLE handle;
+    handle =CreateThread(
+            NULL, // default security attributes
+            0, // use default stack size
+            Receive, // thread function
+            &param, // argument to thread function
+            0, // use default creation flags
+            &id); // returns the thread identifier
+    int liI = _getch();
+    CloseHandle(handle);
 
     getchar();
 
@@ -91,19 +118,7 @@ void SendTopic() {
 }
 */
 
-//primi i ispisi
-void Receive() {
-    printf("Subscriber starting to receive:\n\n");
-    char* data = (char*)malloc(sizeof(Measurment));
-    while (true) {
-        TCPReceive(connectSocket, data, sizeof(Measurment));
-        Measurment* newMeasurment = (Measurment*)malloc(sizeof(Measurment));
-        memcpy(newMeasurment, data, sizeof(Measurment));
-        PrintMeasurment(newMeasurment);
-        free(newMeasurment);
-        Sleep(10);
-    }
-}
+
 
 void Subscribe() {
     printf("1) Status\n2) Analog\n3) Both\nSelect: ");
