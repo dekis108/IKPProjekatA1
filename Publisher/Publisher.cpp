@@ -53,13 +53,15 @@ int main()
 
 }
 
+/// <summary>
+/// Function that sends randomly generated Measurment every 1001 ms by using a sending function from TCPLib.
+/// </summary>
 void SendMeasurment() {
     while (true) {
         printf("Sending...\n");
 
         Measurment* m = GenerateMeasurment();
         if (TCPSend(connectSocket, *m)) {
-            //if (TCPSendMeasurment(connectSocket,CreateMeasurment())) {
             printf("Sent: %s %s %d \n", GetStringFromEnumHelper(m->topic), GetStringFromEnumHelper(m->type), m->value);
         }
         else {
@@ -70,7 +72,10 @@ void SendMeasurment() {
     }
 }
 
-
+/// <summary>
+/// Generates a randomly valued Measurment structure.
+/// </summary>
+/// <returns>Returns a pointer to the generated Measurment.</returns>
 Measurment * GenerateMeasurment() {
     Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
     enum MeasurmentTopic a = Analog;
@@ -104,6 +109,10 @@ Measurment * GenerateMeasurment() {
     return msg;
 }
 
+/// <summary>
+/// Creates a Measurment structure by users input.
+/// </summary>
+/// <returns>Returns a Measurment.</returns>
 Measurment CreateMeasurment() {
     Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
     /*
@@ -145,6 +154,11 @@ Measurment CreateMeasurment() {
     return *msg;
 }
 
+/// <summary>
+/// Initialises the client with functions InitializeWindowsSockets(), CreateSocket() and Connect(). 
+/// Calls IntroduceMyself() to tell PubSubEngine what type of a client it is.
+/// </summary>
+/// <returns>Returns error number.</returns>
 int Init() {
 
     if (InitializeWindowsSockets() == false)
@@ -163,12 +177,20 @@ int Init() {
     return 0;
 }
 
+/// <summary>
+/// Function that uses a sending function from TCPLib to introduce himself as a Subscriber.
+/// </summary>
+/// <returns>Returns true if send function is successfull, otherwise false.</returns>
 bool IntroduceMyself() {
     //publisher se predstavi servisu
     char introducment[2] = "p";
     return TCPSend(connectSocket,introducment);
 }
 
+/// <summary>
+/// Connects the client socket to the server.
+/// </summary>
+/// <returns>True if connect function was successful.</returns>
 bool Connect() {
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_addr.s_addr = inet_addr(ADDRESS);
@@ -184,6 +206,10 @@ bool Connect() {
     return true;
 }
 
+/// <summary>
+/// Creates and inits the clients socket.
+/// </summary>
+/// <returns>True if socket creation was successful.</returns>
 bool CreateSocket() {
     connectSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (connectSocket == INVALID_SOCKET)
@@ -195,6 +221,10 @@ bool CreateSocket() {
     return true;
 }
 
+/// <summary>
+/// Initiates use of the Winsock DLL by a process.
+/// </summary>
+/// <returns>Returns true if init was successful.</returns>
 bool InitializeWindowsSockets() {
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
