@@ -146,11 +146,6 @@ DWORD WINAPI Listen(LPVOID param) {
                     closesocket(acceptedSockets[i]);
                     acceptedSockets[i] = INVALID_SOCKET;
                 }
-                else if (i == MAX_CLIENTS) {
-                    //closesocket(listenSocket);
-                    //WSACleanup();
-                    return 0;
-                }
             }
         }
         else { //accept event
@@ -291,13 +286,12 @@ void ProcessMessages() {
             bool succes = TCPReceive(acceptedSockets[i], data, sizeof(Measurment));
 
             if (!succes) { //always close this socket?
+                if (!DeleteNode(&subscriberList, &acceptedSockets[i], sizeof(SOCKET))) {
+                    DeleteNode(&publisherList, &acceptedSockets[i], sizeof(SOCKET));
+                }
+                
                 closesocket(acceptedSockets[i]);
                 acceptedSockets[i] = INVALID_SOCKET;
-                //TODO izbaci ovog klijente iz njegove liste
-                //ListRemove(acceptedSockets[i], &subscriberList);
-                //ListRemove(acceptedSockets[i], &publisherList);
-
-
                 continue;
             }
 

@@ -68,6 +68,7 @@ void FreeGenericList(NODE **head) {
     }
 }
 
+/*
 void DeleteNode(NODE ** head, void * toDelete) {
     NODE* current = *head;
     char* toDeleteBytes;
@@ -93,5 +94,41 @@ void DeleteNode(NODE ** head, void * toDelete) {
         }
         current = current->next;
     }
+}
+*/
+
+bool DeleteNode(NODE** head, void* toDelete, size_t size ) {
+    NODE* current = *head;
+    if (current == NULL) {
+        return false;
+    }
+
+    NODE* prev = NULL;
+    char*  target = (char*)malloc(size);
+    memcpy(target, toDelete, size);
+    char *data = (char*)malloc(size);
+    while (current != NULL) {
+        memcpy(data, current->data, size);
+        if (*target == *data) {
+            //printf("found\n");
+
+            if (prev == NULL) {
+                (*head) = NULL;
+            }
+            else {
+                prev->next = current->next;
+            }
+            free(current->data);
+            free(current);
+            free(data);
+            free(target);
+            return true;
+        }
+        prev = current;
+        current = current->next;
+    }
+    free(target);
+    free(data);
+    return false;
 }
 
