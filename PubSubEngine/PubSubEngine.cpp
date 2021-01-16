@@ -30,7 +30,8 @@ void SetAcceptedSocketsInvalid();
 void ProcessMessages();
 void ProcessMeasurment(Measurment*);
 void Shutdown();
-void UpdateSubscribers(Measurment* m, NODE *list);
+void UpdateSubscribers(Measurment*, NODE *);
+void SendToNewSubscriber(SOCKET, NODE*);
 
 fd_set readfds;
 SOCKET listenSocket = INVALID_SOCKET;
@@ -284,9 +285,11 @@ void ProcessMessages() {
             }
             else if (data[0] == 'a') {
                 GenericListPushAtStart(&analogSubscribers, ptr, sizeof(SOCKET));
+                SendToNewSubscriber(acceptedSockets[i], analogData);
             }
             else if (data[0] == 's') {
                 GenericListPushAtStart(&statusSubscribers, ptr, sizeof(SOCKET));
+                SendToNewSubscriber(acceptedSockets[i], statusData);
             }
             else {
                 //else message is Measurment data
@@ -356,4 +359,18 @@ void UpdateSubscribers(Measurment* m, Node *list) {
         TCPSend(s, *m);
         temp = temp->next;
     }
+}
+
+
+void SendToNewSubscriber(SOCKET sub, NODE *dataHead) {
+    Node* temp = dataHead;
+    if (temp == NULL) {
+        return;
+    }
+    Measurment* data = (Measurment*)malloc(sizeof(Measurment));
+    while (temp != NULL) {
+        memcpy(data, temp->data, sizeof(Measurment));
+        TCPSend(sub, *data);
+    }
+    free(data);
 }
