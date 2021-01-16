@@ -280,16 +280,18 @@ void SetAcceptedSocketsInvalid() {
 * ProccessMeasurment for processing data.
 */
 void ProcessMessages() {
+    char* data = (char*)malloc(sizeof(Measurment));
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (FD_ISSET(acceptedSockets[i], &readfds)) {
-            char* data = (char*)malloc(sizeof(Measurment));
+           
             bool succes = TCPReceive(acceptedSockets[i], data, sizeof(Measurment));
 
             if (!succes) { //always close this socket?
+               
+
                 if (!DeleteNode(&subscriberList, &acceptedSockets[i], sizeof(SOCKET))) {
                     DeleteNode(&publisherList, &acceptedSockets[i], sizeof(SOCKET));
                 }
-                
                 closesocket(acceptedSockets[i]);
                 acceptedSockets[i] = INVALID_SOCKET;
                 continue;
@@ -317,13 +319,13 @@ void ProcessMessages() {
                 //else message is Measurment data
                 Measurment* newMeasurment = (Measurment*)malloc(sizeof(Measurment));
                 memcpy(newMeasurment, data, sizeof(Measurment));
-                //data treba free?
-                free(data); //zasto ovo puca?
+                //free(data);
                 ProcessMeasurment(newMeasurment);
                 free(newMeasurment);
             }
         }
     }
+    free(data);
 }
 
 /*
