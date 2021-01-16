@@ -30,7 +30,7 @@ bool Connect();
 bool IntroduceMyself();
 void Subscribe();
 //DWORD WINAPI Receive();
-void SendTopic();
+void StartRecieveThread();
 
 SOCKET connectSocket = INVALID_SOCKET;
 sockaddr_in serverAddress;
@@ -65,59 +65,25 @@ int main()
 
    // Receive();
     //Thread za Recieve
-    DWORD id , param = 1;
-    HANDLE handle;
-    handle =CreateThread(
-            NULL, // default security attributes
-            0, // use default stack size
-            Receive, // thread function
-            &param, // argument to thread function
-            0, // use default creation flags
-            &id); // returns the thread identifier
-    int liI = _getch();
-    CloseHandle(handle);
-
+    
+    StartRecieveThread();
     getchar();
 
 }
 
-/*
-void SendTopic() {
-    char topic[7];
-    bool subs_status = false;
-    bool subs_analog = false;
-
-    while (true) {
-        printf("Enter the topic you want to subscribe to (analog,status). Enter 'end' to finnish.\n");
-        scanf("%s", topic);
-        if (strcmp(topic, "status") == 0) {
-            if (subs_status) {
-                continue;
-            }
-            char t[2] = "s";
-            TCPSend(connectSocket, t);
-            subs_status = true;
-            printf("You subscribed to : status \n");
-        }
-        else if (strcmp(topic, "analog") == 0) {
-            if (subs_analog) {
-                continue;
-            }
-            char t[2] = "a";
-            TCPSend(connectSocket, t);
-            subs_analog = true;
-            printf("You subscribed to : analog \n");
-        }
-        else if (strcmp(topic, "end") == 0) {
-            break;
-        }
-        else {
-            printf("Please, enter a valid topic. \n");
-        }
-    }
+void StartRecieveThread() {
+    DWORD id, param = 1;
+    HANDLE handle;
+    handle = CreateThread(
+        NULL, // default security attributes
+        0, // use default stack size
+        Receive, // thread function
+        &param, // argument to thread function
+        0, // use default creation flags
+        &id); // returns the thread identifier
+    int liI = _getch();
+    CloseHandle(handle);
 }
-*/
-
 
 
 void Subscribe() {
