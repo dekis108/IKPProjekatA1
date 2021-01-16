@@ -69,7 +69,7 @@ bool TCPReceive(SOCKET connectSocket, char* recvbuf, size_t len) {
     else
     {
         // there was an error during recv
-        printf("recv failed with error: %d\n", WSAGetLastError());
+        //printf("recv failed with error: %d\n", WSAGetLastError());
         return false;
     }
     return true;

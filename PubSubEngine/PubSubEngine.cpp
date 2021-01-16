@@ -15,7 +15,7 @@
 
 #define DEFAULT_BUFLEN 1000
 #define DEFAULT_PORT "27016"
-#define MAX_CLIENTS 10
+#define MAX_CLIENTS 3
 #define TIMEVAL_SEC 0
 #define TIMEVAL_USEC 0
 
@@ -116,7 +116,7 @@ DWORD WINAPI Listen(LPVOID param) {
     {
         printf("listen failed with error: %d\n", WSAGetLastError());
         closesocket(listenSocket);
-        WSACleanup();
+        Shutdown();
         return 0;
     }
     printf("Listening...\n");
@@ -146,7 +146,7 @@ DWORD WINAPI Listen(LPVOID param) {
                     acceptedSockets[i] = INVALID_SOCKET;
                 }
                 else if (i == MAX_CLIENTS) {
-                    closesocket(listenSocket);
+                    //closesocket(listenSocket);
                     //WSACleanup();
                     return 0;
                 }
@@ -154,14 +154,17 @@ DWORD WINAPI Listen(LPVOID param) {
         }
         else { //accept event
             if (FD_ISSET(listenSocket, &readfds)) {
-                for (int i = 0; i < MAX_CLIENTS; i++) {
+                int  i;
+                for (i = 0; i < MAX_CLIENTS; i++) {
                     if (acceptedSockets[i] == INVALID_SOCKET) {
                         acceptedSockets[i] = accept(listenSocket, NULL, NULL);
                         if (acceptedSockets[i] == INVALID_SOCKET)
                         {
                             printf("accept failed with error: %d\n", WSAGetLastError());
-                            closesocket(listenSocket);
-                            WSACleanup();
+                            closesocket(acceptedSockets[i]);
+                            acceptedSockets[i] = INVALID_SOCKET;
+                            //closesocket(listenSocket);
+                            //WSACleanup();
                             return 0;
                         }
 
@@ -169,7 +172,10 @@ DWORD WINAPI Listen(LPVOID param) {
                     }
                 }
                 //ako mu ne nadje mesto uradi nesto
-
+                if (i == MAX_CLIENTS) {
+                   // printf("Nema mesta za jos jednu konekciju.\n");
+                }
+                
             }
             else { //servis prima poruku
                 ProcessMessages();
@@ -281,7 +287,18 @@ void ProcessMessages() {
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (FD_ISSET(acceptedSockets[i], &readfds)) {
             char* data = (char*)malloc(sizeof(Measurment));
-            TCPReceive(acceptedSockets[i], data, sizeof(Measurment));
+            bool succes = TCPReceive(acceptedSockets[i], data, sizeof(Measurment));
+
+            if (!succes) { //always close this socket?
+                closesocket(acceptedSockets[i]);
+                acceptedSockets[i] = INVALID_SOCKET;
+                //TODO izbaci ovog klijente iz njegove liste
+                //ListRemove(acceptedSockets[i], &subscriberList);
+                //ListRemove(acceptedSockets[i], &publisherList);
+
+
+                continue;
+            }
 
             SOCKET* ptr = &acceptedSockets[i];
             //proveri da li je poruka predstavljanja
