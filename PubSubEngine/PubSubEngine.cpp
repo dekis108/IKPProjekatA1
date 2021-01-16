@@ -328,7 +328,9 @@ void ProcessMeasurment(Measurment *m) {
     }
 }
 
-
+/*
+* Frees program memory, handles and performs WSA shutdown logic.
+*/
 void Shutdown() {
     closesocket(listenSocket);
     for (int i = 0; i < MAX_CLIENTS; ++i) {
@@ -348,6 +350,11 @@ void Shutdown() {
 }
 
 
+/*
+* After a new measurment arrives, send it to all the subscribers that all subscribed to that topic.
+* *m = Measurment to be sent
+* *list = head of the list of subscribers that should receive the measurment
+*/
 void UpdateSubscribers(Measurment* m, Node *list) {
     Node* temp = list;
     if (temp == NULL) {
@@ -362,6 +369,11 @@ void UpdateSubscribers(Measurment* m, Node *list) {
 }
 
 
+/*
+* After a Subscriber Subscribes to a new topic, send all saved data of the said topic to him.
+* sub = SOCKET of the subscriber
+* *dataHead = head of the list with the correct topic data
+*/
 void SendToNewSubscriber(SOCKET sub, NODE *dataHead) {
     Node* temp = dataHead;
     if (temp == NULL) {
