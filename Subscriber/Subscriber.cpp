@@ -35,9 +35,12 @@ void StartRecieveThread();
 SOCKET connectSocket = INVALID_SOCKET;
 sockaddr_in serverAddress;
 
-//primi i ispisi
+/// <summary>
+/// Recieves Measurment structure from the PubSubEngine. Uses a function from TCPLib to recieve a packet.
+/// </summary>
+/// <param name="param">Needed to construct a thread.</param>
+/// <returns>Will never return since there is an infinite loop.</returns>
 DWORD WINAPI Receive(LPVOID param) {
-    //printf("Subscriber starting to receive:\n\n");
     char* data = (char*)malloc(sizeof(Measurment));
     while (true) {
         TCPReceive(connectSocket, data, sizeof(Measurment));
@@ -63,14 +66,18 @@ int main()
 
     Subscribe();
 
-   // Receive();
-    //Thread za Recieve
+    printf("Client subscribed.\n");
     
     StartRecieveThread();
+
     getchar();
 
 }
 
+
+/// <summary>
+/// Creates and starts the thread for the Receive function.
+/// </summary>
 void StartRecieveThread() {
     DWORD id, param = 1;
     HANDLE handle;
@@ -85,7 +92,10 @@ void StartRecieveThread() {
     CloseHandle(handle);
 }
 
-
+/// <summary>
+/// Gives user the menu for picking subscription topics. Based on users input, uses a sending function from TCPLib to 
+/// tell PubSubEngine what topic client has subscribed to.
+/// </summary>
 void Subscribe() {
     printf("1) Status\n2) Analog\n3) Both\nSelect: ");
     char c = getchar();
@@ -109,6 +119,11 @@ void Subscribe() {
     }
 }
 
+/// <summary>
+/// Initialises the client with functions InitializeWindowsSockets(), CreateSocket() and Connect(). 
+/// Calls IntroduceMyself() to tell PubSubEngine what type of a client it is.
+/// </summary>
+/// <returns>Returns error number.</returns>
 int Init() {
 
     if (InitializeWindowsSockets() == false)
@@ -127,12 +142,20 @@ int Init() {
     return 0;
 }
 
+/// <summary>
+/// Function that uses a sending function from TCPLib to introduce himself as a Subscriber.
+/// </summary>
+/// <returns>Returns true if send function is successfull, otherwise false.</returns>
 bool IntroduceMyself() {
     //subs se predstavi servisu
     char introducment[2] = "d";
     return TCPSend(connectSocket, introducment);
 }
 
+/// <summary>
+/// Connects the client socket to the server.
+/// </summary>
+/// <returns>True if connect function was successful.</returns>
 bool Connect() {
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_addr.s_addr = inet_addr(ADDRESS);
@@ -148,6 +171,10 @@ bool Connect() {
     return true;
 }
 
+/// <summary>
+/// Creates and inits the clients socket.
+/// </summary>
+/// <returns>True if socket creation was successful.</returns>
 bool CreateSocket() {
     connectSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (connectSocket == INVALID_SOCKET)
@@ -159,6 +186,10 @@ bool CreateSocket() {
     return true;
 }
 
+/// <summary>
+/// Initiates use of the Winsock DLL by a process.
+/// </summary>
+/// <returns>Returns true if init was successful.</returns>
 bool InitializeWindowsSockets() {
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
