@@ -31,6 +31,7 @@ bool IntroduceMyself();
 void Subscribe();
 //DWORD WINAPI Receive();
 void StartRecieveThread();
+bool Validate(Measurment *);
 
 SOCKET connectSocket = INVALID_SOCKET;
 sockaddr_in serverAddress;
@@ -72,6 +73,16 @@ int main()
 
     getchar();
 
+}
+
+bool Validate(Measurment *m) {
+    if (m->topic == Analog && m->value >= 0) {
+        return true;
+    }
+    else if (m->topic == Status && (m->value == 0 || m->value == 1)) {
+        return true;
+    }
+    return false;
 }
 
 
