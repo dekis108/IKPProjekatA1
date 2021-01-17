@@ -289,9 +289,14 @@ void ProcessMessages() {
             if (!succes) { //always close this socket?
                
 
-                if (!DeleteNode(&subscriberList, &acceptedSockets[i], sizeof(SOCKET))) {
-                    DeleteNode(&publisherList, &acceptedSockets[i], sizeof(SOCKET));
-                }
+                //if (!DeleteNode(&subscriberList, &acceptedSockets[i], sizeof(SOCKET))) {
+                //    DeleteNode(&publisherList, &acceptedSockets[i], sizeof(SOCKET));
+                //}
+
+                DeleteNode(&analogSubscribers, &acceptedSockets[i], sizeof(SOCKET));
+                DeleteNode(&statusSubscribers, &acceptedSockets[i], sizeof(SOCKET));
+                
+
                 closesocket(acceptedSockets[i]);
                 acceptedSockets[i] = INVALID_SOCKET;
                 continue;
@@ -300,11 +305,11 @@ void ProcessMessages() {
             SOCKET* ptr = &acceptedSockets[i];
             //proveri da li je poruka predstavljanja
             if (data[0] == 'p') {
-                GenericListPushAtStart(&publisherList, ptr, sizeof(SOCKET));
+                //GenericListPushAtStart(&publisherList, ptr, sizeof(SOCKET));
                 printf("Connected client: publisher\n");
             }
             else if (data[0] == 'd') {
-                GenericListPushAtStart(&subscriberList, ptr, sizeof(SOCKET));
+                //GenericListPushAtStart(&subscriberList, ptr, sizeof(SOCKET));
                 printf("Connected client: subscriber\n");
             }
             else if (data[0] == 'a') {

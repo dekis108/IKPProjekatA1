@@ -113,7 +113,7 @@ bool DeleteNode(NODE** head, void* toDelete, size_t size ) {
             //printf("found\n");
 
             if (prev == NULL) {
-                (*head) = NULL;
+                (*head) = current->next;
             }
             else {
                 prev->next = current->next;
