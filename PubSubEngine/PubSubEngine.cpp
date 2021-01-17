@@ -49,12 +49,12 @@ NODE *analogData = NULL;
 NODE *statusSubscribers = NULL;
 NODE *analogSubscribers = NULL;
 
-int meme = 0;
 
+HANDLE listenHandle;
 
 int main()
 {
-    HANDLE listenHandle;
+ 
     DWORD listenID;
 
     int result = Init();
@@ -71,6 +71,7 @@ int main()
     if (listenHandle) {
         WaitForSingleObject(listenHandle, INFINITE);
     }
+
 
     getchar();
     Shutdown();
@@ -373,6 +374,8 @@ void Shutdown() {
     FreeGenericList(&analogData);
     FreeGenericList(&statusSubscribers);
     FreeGenericList(&analogSubscribers);
+
+    SAFE_DELETE_HANDLE(listenHandle);
 
     printf("Service freed all memory.");
     getchar();
