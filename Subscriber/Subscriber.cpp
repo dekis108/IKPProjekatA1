@@ -47,6 +47,12 @@ DWORD WINAPI Receive(LPVOID param) {
         TCPReceive(connectSocket, data, sizeof(Measurment));
         Measurment* newMeasurment = (Measurment*)malloc(sizeof(Measurment));
         memcpy(newMeasurment, data, sizeof(Measurment));
+        if (Validate(newMeasurment)) {
+            printf("VALID: ");
+        }
+        else {
+            printf("INVALID: ");
+        }
         PrintMeasurment(newMeasurment);
         free(newMeasurment);
         Sleep(10);
