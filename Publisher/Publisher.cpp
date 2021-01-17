@@ -78,18 +78,19 @@ void SendMeasurment() {
 /// <returns>Returns a pointer to the generated Measurment.</returns>
 Measurment * GenerateMeasurment() {
     Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
-    enum MeasurmentTopic a = Analog;
     srand(time(NULL));
-    msg->value = (rand() % 100) + 1; 
+    //msg->value = (rand() % 100) + 1; 
     int topic = (rand() % 2);
     int type = (rand() % 3);
     switch (topic) {
         case 0: 
             msg->topic = Analog;
+            msg->value = (rand() % 100);
             break;
     
         case 1: 
             msg->topic = Status;
+            msg->value = (rand() % 5);
             break;
     }
     switch (type) {
