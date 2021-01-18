@@ -81,7 +81,7 @@ Measurment * GenerateMeasurment() {
     srand(time(NULL));
     //msg->value = (rand() % 100) + 1; 
     int topic = (rand() % 2);
-    int type = (rand() % 3);
+    int type = (rand() % 2);
     switch (topic) {
         case 0: 
             msg->topic = Analog;
@@ -90,23 +90,21 @@ Measurment * GenerateMeasurment() {
     
         case 1: 
             msg->topic = Status;
+            msg->type = MER;
             msg->value = (rand() % 5);
             break;
     }
-    switch (type) {
+    if (msg->topic == Analog) {
+        switch (type)
+        {
         case 0:
             msg->type = SWG;
             break;
-
         case 1:
             msg->type = CRB;
             break;
-
-        case 2:
-            msg->type = MER;
-            break;
+        }
     }
-
     return msg;
 }
 
