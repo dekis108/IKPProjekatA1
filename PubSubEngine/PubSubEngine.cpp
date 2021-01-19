@@ -16,7 +16,7 @@
 
 #define DEFAULT_BUFLEN 1000
 #define DEFAULT_PORT "27016"
-#define MAX_CLIENTS 3
+#define MAX_CLIENTS 10
 #define TIMEVAL_SEC 0
 #define TIMEVAL_USEC 0
 
@@ -34,6 +34,7 @@ void ProcessMeasurment(Measurment*);
 void Shutdown();
 void UpdateSubscribers(Measurment*, NODE *);
 void SendToNewSubscriber(SOCKET, NODE*);
+bool InitCriticalSections();
 
 fd_set readfds;
 SOCKET listenSocket = INVALID_SOCKET;
@@ -41,6 +42,10 @@ SOCKET acceptedSockets[MAX_CLIENTS];
 addrinfo* resultingAddress = NULL;
 timeval timeVal;
 
+CRITICAL_SECTION CSAnalogData;
+CRITICAL_SECTION CSStatusData;
+CRITICAL_SECTION CSAnalogSubs;
+CRITICAL_SECTION CSStatusSubs;
 
 
 NODE *publisherList = NULL;
@@ -98,6 +103,10 @@ int Init() {
         return 3;
     }
 
+    if (InitCriticalSections() == false) {
+        return 4;
+    }
+
     freeaddrinfo(resultingAddress);
 
     SetNonBlocking();
@@ -107,6 +116,17 @@ int Init() {
     return 0;
 }
 
+/*
+* Calls InitializeCriticalSection(...) for every CRITICAL_SECTION handle.
+*/
+bool InitCriticalSections() {
+    InitializeCriticalSection(&CSAnalogData);
+    InitializeCriticalSection(&CSStatusData);
+    InitializeCriticalSection(&CSAnalogSubs);
+    InitializeCriticalSection(&CSStatusSubs);
+
+    return true;
+}
 
 /*
 * After the serice is initialised, enter the listening state.
@@ -289,15 +309,13 @@ void ProcessMessages() {
             bool succes = TCPReceive(acceptedSockets[i], data, sizeof(Measurment));
 
             if (!succes) { //always close this socket?
-               
-
-                //if (!DeleteNode(&subscriberList, &acceptedSockets[i], sizeof(SOCKET))) {
-                //    DeleteNode(&publisherList, &acceptedSockets[i], sizeof(SOCKET));
-                //}
-
+                EnterCriticalSection(&CSAnalogSubs);
                 DeleteNode(&analogSubscribers, &acceptedSockets[i], sizeof(SOCKET));
+                LeaveCriticalSection(&CSAnalogSubs);
+
+                EnterCriticalSection(&CSStatusSubs);
                 DeleteNode(&statusSubscribers, &acceptedSockets[i], sizeof(SOCKET));
-                
+                LeaveCriticalSection(&CSStatusSubs);
 
                 closesocket(acceptedSockets[i]);
                 acceptedSockets[i] = INVALID_SOCKET;
@@ -315,12 +333,16 @@ void ProcessMessages() {
                 printf("Connected client: subscriber\n");
             }
             else if (data[0] == 'a') {
+                EnterCriticalSection(&CSAnalogSubs);
                 GenericListPushAtStart(&analogSubscribers, ptr, sizeof(SOCKET));
                 SendToNewSubscriber(acceptedSockets[i], analogData);
+                LeaveCriticalSection(&CSAnalogSubs);
             }
             else if (data[0] == 's') {
+                EnterCriticalSection(&CSStatusSubs);
                 GenericListPushAtStart(&statusSubscribers, ptr, sizeof(SOCKET));
                 SendToNewSubscriber(acceptedSockets[i], statusData);
+                LeaveCriticalSection(&CSStatusSubs);
             }
             else {
                 //else message is Measurment data
@@ -346,12 +368,16 @@ void ProcessMeasurment(Measurment *m) {
     switch (m->topic)
     {
     case Analog:
+        EnterCriticalSection(&CSAnalogData);
         GenericListPushAtStart(&analogData, m, sizeof(Measurment));
         UpdateSubscribers(m, analogSubscribers);
+        LeaveCriticalSection(&CSAnalogData);
         break;
     case Status:
+        EnterCriticalSection(&CSStatusData);
         GenericListPushAtStart(&statusData, m, sizeof(Measurment));
         UpdateSubscribers(m, statusSubscribers);
+        LeaveCriticalSection(&CSStatusData);
         break;
     default:
         printf("[ERROR] Topic %d not supported.", m->topic);
@@ -377,6 +403,13 @@ void Shutdown() {
     FreeGenericList(&analogSubscribers);
 
     SAFE_DELETE_HANDLE(listenHandle);
+    
+    DeleteCriticalSection(&CSStatusData);
+    DeleteCriticalSection(&CSAnalogData);
+    DeleteCriticalSection(&CSStatusSubs);
+    DeleteCriticalSection(&CSAnalogSubs);
+
+
 
     printf("Service freed all memory.");
     getchar();
