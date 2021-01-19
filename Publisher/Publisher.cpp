@@ -37,6 +37,7 @@ sockaddr_in serverAddress;
 
 int main()
 {
+    srand(time(NULL));
     int result = Init();
     if (result) {
         printf("ERROR CODE %d, press any key to exit\n", result);
@@ -74,7 +75,7 @@ void SendMeasurment() {
 Measurment * GenerateMeasurment() {
     Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
     enum MeasurmentTopic a = Analog;
-    srand(time(NULL));
+    
     msg->value = (rand() % 100) + 1; 
     int topic = (rand() % 2);
     int type = (rand() % 3);
