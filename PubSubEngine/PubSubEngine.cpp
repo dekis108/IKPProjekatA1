@@ -49,12 +49,12 @@ NODE *analogData = NULL;
 NODE *statusSubscribers = NULL;
 NODE *analogSubscribers = NULL;
 
-int meme = 0;
 
+HANDLE listenHandle;
 
 int main()
 {
-    HANDLE listenHandle;
+ 
     DWORD listenID;
 
     int result = Init();
@@ -71,6 +71,7 @@ int main()
     if (listenHandle) {
         WaitForSingleObject(listenHandle, INFINITE);
     }
+
 
     getchar();
     Shutdown();
@@ -280,16 +281,23 @@ void SetAcceptedSocketsInvalid() {
 * ProccessMeasurment for processing data.
 */
 void ProcessMessages() {
+    char* data = (char*)malloc(sizeof(Measurment));
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (FD_ISSET(acceptedSockets[i], &readfds)) {
-            char* data = (char*)malloc(sizeof(Measurment));
+           
             bool succes = TCPReceive(acceptedSockets[i], data, sizeof(Measurment));
 
             if (!succes) { //always close this socket?
-                if (!DeleteNode(&subscriberList, &acceptedSockets[i], sizeof(SOCKET))) {
-                    DeleteNode(&publisherList, &acceptedSockets[i], sizeof(SOCKET));
-                }
+               
+
+                //if (!DeleteNode(&subscriberList, &acceptedSockets[i], sizeof(SOCKET))) {
+                //    DeleteNode(&publisherList, &acceptedSockets[i], sizeof(SOCKET));
+                //}
+
+                DeleteNode(&analogSubscribers, &acceptedSockets[i], sizeof(SOCKET));
+                DeleteNode(&statusSubscribers, &acceptedSockets[i], sizeof(SOCKET));
                 
+
                 closesocket(acceptedSockets[i]);
                 acceptedSockets[i] = INVALID_SOCKET;
                 continue;
@@ -298,11 +306,11 @@ void ProcessMessages() {
             SOCKET* ptr = &acceptedSockets[i];
             //proveri da li je poruka predstavljanja
             if (data[0] == 'p') {
-                GenericListPushAtStart(&publisherList, ptr, sizeof(SOCKET));
+                //GenericListPushAtStart(&publisherList, ptr, sizeof(SOCKET));
                 printf("Connected client: publisher\n");
             }
             else if (data[0] == 'd') {
-                GenericListPushAtStart(&subscriberList, ptr, sizeof(SOCKET));
+                //GenericListPushAtStart(&subscriberList, ptr, sizeof(SOCKET));
                 printf("Connected client: subscriber\n");
             }
             else if (data[0] == 'a') {
@@ -317,13 +325,13 @@ void ProcessMessages() {
                 //else message is Measurment data
                 Measurment* newMeasurment = (Measurment*)malloc(sizeof(Measurment));
                 memcpy(newMeasurment, data, sizeof(Measurment));
-                //data treba free?
-                free(data); //zasto ovo puca?
+                //free(data);
                 ProcessMeasurment(newMeasurment);
                 free(newMeasurment);
             }
         }
     }
+    free(data);
 }
 
 /*
@@ -366,6 +374,8 @@ void Shutdown() {
     FreeGenericList(&analogData);
     FreeGenericList(&statusSubscribers);
     FreeGenericList(&analogSubscribers);
+
+    SAFE_DELETE_HANDLE(listenHandle);
 
     printf("Service freed all memory.");
     getchar();
