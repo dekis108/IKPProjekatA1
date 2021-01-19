@@ -156,6 +156,7 @@
     <ClInclude Include="LinkedList.h" />
     <ClInclude Include="Measurment.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="ThreadSafeGenericList.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
