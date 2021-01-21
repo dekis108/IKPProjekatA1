@@ -17,6 +17,7 @@
 #define DEFAULT_BUFLEN 1000
 #define DEFAULT_PORT "27016"
 #define MAX_CLIENTS 10
+#define MAX_THREADS 16
 #define TIMEVAL_SEC 0
 #define TIMEVAL_USEC 0
 
@@ -35,6 +36,7 @@ void Shutdown();
 void UpdateSubscribers(Measurment*, NODE *);
 void SendToNewSubscriber(SOCKET, NODE*);
 bool InitCriticalSections();
+bool InitWorkerThreads();
 
 fd_set readfds;
 SOCKET listenSocket = INVALID_SOCKET;
@@ -57,6 +59,7 @@ NODE *analogSubscribers = NULL;
 
 
 HANDLE listenHandle;
+HANDLE workerHandles[16];
 
 int main()
 {
@@ -83,6 +86,10 @@ int main()
     Shutdown();
 }
 
+bool InitWorkerThreads() {
+    return true;
+}
+
 /*
 * Initialises the service and setups listen and accepted sockets.
 */
@@ -105,6 +112,10 @@ int Init() {
 
     if (InitCriticalSections() == false) {
         return 4;
+    }
+
+    if (InitWorkerThreads() == false) {
+        return 5;
     }
 
     freeaddrinfo(resultingAddress);
