@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include "WorkerStruct.h"
 
 //#include "../Common/LinkedList.h";
 //#include "../Common/GenericList.h";
@@ -36,7 +37,8 @@ void Shutdown();
 void UpdateSubscribers(Measurment*, NODE *);
 void SendToNewSubscriber(SOCKET, NODE*);
 bool InitCriticalSections();
-bool InitWorkerThreads();
+void CallWorkerTask(int, char*);
+DWORD WINAPI Work(LPVOID);
 
 fd_set readfds;
 SOCKET listenSocket = INVALID_SOCKET;
@@ -59,7 +61,7 @@ NODE *analogSubscribers = NULL;
 
 
 HANDLE listenHandle;
-HANDLE workerHandles[16];
+HANDLE workerHandles[MAX_THREADS];
 
 int main()
 {
@@ -86,9 +88,30 @@ int main()
     Shutdown();
 }
 
-bool InitWorkerThreads() {
-    return true;
+void CallWorkerTask(int i, char *data) {
+
+    while (true) {
+        for (int k = 0; k < MAX_THREADS; ++k) {
+            if (workerHandles[k] != 0) {
+                continue;
+            }
+
+            WorkerData* wData = (WorkerData *)malloc(sizeof(WorkerData));
+            wData->i = i;
+            wData->data = data;
+
+            workerHandles[i] = CreateThread(NULL, 0, &Work, wData, 0, NULL);
+            if (workerHandles[i] == 0) {
+                printf("Erorr while creating a worker thread. Shutting down..");
+                Shutdown();
+            }
+            return;
+        }
+        printf("No avaliable thread for message proccessing, consider increasing thread count.Waiting..\n");
+        Sleep(1000);
+    }
 }
+
 
 /*
 * Initialises the service and setups listen and accepted sockets.
@@ -112,10 +135,6 @@ int Init() {
 
     if (InitCriticalSections() == false) {
         return 4;
-    }
-
-    if (InitWorkerThreads() == false) {
-        return 5;
     }
 
     freeaddrinfo(resultingAddress);
@@ -206,13 +225,68 @@ DWORD WINAPI Listen(LPVOID param) {
                 }
                 
             }
-            else { //servis prima poruku
-                ProcessMessages();
-            }
+            //else { //servis prima poruku
+            ProcessMessages();
+            //}
 
         }
     }
 
+}
+
+DWORD WINAPI Work(LPVOID lparams) {
+    WorkerData *wData = (WorkerData*)lparams;
+
+    int i = wData->i;
+    char *data = wData->data;
+
+    bool succes = TCPReceive(acceptedSockets[i], data, sizeof(Measurment));
+
+    if (!succes) { //always close this socket?
+        EnterCriticalSection(&CSAnalogSubs);
+        DeleteNode(&analogSubscribers, &acceptedSockets[i], sizeof(SOCKET));
+        LeaveCriticalSection(&CSAnalogSubs);
+
+        EnterCriticalSection(&CSStatusSubs);
+        DeleteNode(&statusSubscribers, &acceptedSockets[i], sizeof(SOCKET));
+        LeaveCriticalSection(&CSStatusSubs);
+
+        closesocket(acceptedSockets[i]);
+        acceptedSockets[i] = INVALID_SOCKET;
+        //continue;
+        return 0;
+    }
+
+    SOCKET* ptr = &acceptedSockets[i];
+    //proveri da li je poruka predstavljanja
+    if (data[0] == 'p') {
+        //GenericListPushAtStart(&publisherList, ptr, sizeof(SOCKET));
+        printf("Connected client: publisher\n");
+    }
+    else if (data[0] == 'd') {
+        //GenericListPushAtStart(&subscriberList, ptr, sizeof(SOCKET));
+        printf("Connected client: subscriber\n");
+    }
+    else if (data[0] == 'a') {
+        EnterCriticalSection(&CSAnalogSubs);
+        GenericListPushAtStart(&analogSubscribers, ptr, sizeof(SOCKET));
+        SendToNewSubscriber(acceptedSockets[i], analogData);
+        LeaveCriticalSection(&CSAnalogSubs);
+    }
+    else if (data[0] == 's') {
+        EnterCriticalSection(&CSStatusSubs);
+        GenericListPushAtStart(&statusSubscribers, ptr, sizeof(SOCKET));
+        SendToNewSubscriber(acceptedSockets[i], statusData);
+        LeaveCriticalSection(&CSStatusSubs);
+    }
+    else {
+        //else message is Measurment data
+        Measurment* newMeasurment = (Measurment*)malloc(sizeof(Measurment));
+        memcpy(newMeasurment, data, sizeof(Measurment));
+        //free(data);
+        ProcessMeasurment(newMeasurment);
+        free(newMeasurment);
+    }
 }
 
 
@@ -317,52 +391,10 @@ void ProcessMessages() {
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (FD_ISSET(acceptedSockets[i], &readfds)) {
            
-            bool succes = TCPReceive(acceptedSockets[i], data, sizeof(Measurment));
+            //TODO sad napravi thread da ovo obradi
+            CallWorkerTask(i, data);
 
-            if (!succes) { //always close this socket?
-                EnterCriticalSection(&CSAnalogSubs);
-                DeleteNode(&analogSubscribers, &acceptedSockets[i], sizeof(SOCKET));
-                LeaveCriticalSection(&CSAnalogSubs);
 
-                EnterCriticalSection(&CSStatusSubs);
-                DeleteNode(&statusSubscribers, &acceptedSockets[i], sizeof(SOCKET));
-                LeaveCriticalSection(&CSStatusSubs);
-
-                closesocket(acceptedSockets[i]);
-                acceptedSockets[i] = INVALID_SOCKET;
-                continue;
-            }
-
-            SOCKET* ptr = &acceptedSockets[i];
-            //proveri da li je poruka predstavljanja
-            if (data[0] == 'p') {
-                //GenericListPushAtStart(&publisherList, ptr, sizeof(SOCKET));
-                printf("Connected client: publisher\n");
-            }
-            else if (data[0] == 'd') {
-                //GenericListPushAtStart(&subscriberList, ptr, sizeof(SOCKET));
-                printf("Connected client: subscriber\n");
-            }
-            else if (data[0] == 'a') {
-                EnterCriticalSection(&CSAnalogSubs);
-                GenericListPushAtStart(&analogSubscribers, ptr, sizeof(SOCKET));
-                SendToNewSubscriber(acceptedSockets[i], analogData);
-                LeaveCriticalSection(&CSAnalogSubs);
-            }
-            else if (data[0] == 's') {
-                EnterCriticalSection(&CSStatusSubs);
-                GenericListPushAtStart(&statusSubscribers, ptr, sizeof(SOCKET));
-                SendToNewSubscriber(acceptedSockets[i], statusData);
-                LeaveCriticalSection(&CSStatusSubs);
-            }
-            else {
-                //else message is Measurment data
-                Measurment* newMeasurment = (Measurment*)malloc(sizeof(Measurment));
-                memcpy(newMeasurment, data, sizeof(Measurment));
-                //free(data);
-                ProcessMeasurment(newMeasurment);
-                free(newMeasurment);
-            }
         }
     }
     free(data);
@@ -414,6 +446,9 @@ void Shutdown() {
     FreeGenericList(&analogSubscribers);
 
     SAFE_DELETE_HANDLE(listenHandle);
+    for (int i = 0; i < MAX_THREADS; ++i) {
+        SAFE_DELETE_HANDLE(workerHandles[i]);
+    }
     
     DeleteCriticalSection(&CSStatusData);
     DeleteCriticalSection(&CSAnalogData);
