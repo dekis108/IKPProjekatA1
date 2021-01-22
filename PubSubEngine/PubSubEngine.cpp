@@ -37,8 +37,10 @@ void Shutdown();
 void UpdateSubscribers(Measurment*, NODE *);
 void SendToNewSubscriber(SOCKET, NODE*);
 bool InitCriticalSections();
-void CallWorkerTask(int, char*);
-DWORD WINAPI Work(LPVOID);
+//void CallWorkerTask(int, char*);
+//DWORD WINAPI Work(LPVOID);
+DWORD WINAPI DoWork(LPVOID);
+DWORD WINAPI InitWorkerThreads(LPVOID);
 
 fd_set readfds;
 SOCKET listenSocket = INVALID_SOCKET;
@@ -61,12 +63,14 @@ NODE *analogSubscribers = NULL;
 
 
 HANDLE listenHandle;
+HANDLE workerManagerHandle;
 HANDLE workerHandles[MAX_THREADS];
 
 int main()
 {
  
     DWORD listenID;
+    DWORD workerID;
 
     int result = Init();
     if (result) {
@@ -77,7 +81,10 @@ int main()
 
     printf("Server live and ready to listen\n");
     
-    listenHandle = CreateThread(NULL, 0, &Listen, (LPVOID)0, 0, &listenID);
+    listenHandle        = CreateThread(NULL, 0, &Listen, (LPVOID)0, 0, &listenID);
+    workerManagerHandle = CreateThread(NULL, 0, &InitWorkerThreads, (LPVOID)0, 0, &workerID);
+
+
     //Listen();
     if (listenHandle) {
         WaitForSingleObject(listenHandle, INFINITE);
@@ -88,6 +95,7 @@ int main()
     Shutdown();
 }
 
+/*
 void CallWorkerTask(int i, char *data) {
 
     while (true) {
@@ -111,6 +119,7 @@ void CallWorkerTask(int i, char *data) {
         Sleep(1000);
     }
 }
+*/
 
 
 /*
@@ -145,6 +154,19 @@ int Init() {
 
     return 0;
 }
+
+
+DWORD WINAPI InitWorkerThreads() {
+    for (int i = 0; i < MAX_THREADS; ++i) {
+        workerHandles[i] = CreateThread(NULL, 0, &DoWork, (LPVOID)0, 0, NULL);
+        if (workerHandles[i] == 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 
 /*
 * Calls InitializeCriticalSection(...) for every CRITICAL_SECTION handle.
@@ -392,7 +414,7 @@ void ProcessMessages() {
         if (FD_ISSET(acceptedSockets[i], &readfds)) {
            
             //TODO sad napravi thread da ovo obradi
-            CallWorkerTask(i, data);
+            //CallWorkerTask(i, data);
 
 
         }
@@ -498,4 +520,15 @@ void SendToNewSubscriber(SOCKET sub, NODE *dataHead) {
         temp = temp->next;
     }
     free(data);
+}
+
+
+DWORD WINAPI DoWork(LPVOID) {
+    while (true) {
+        //zakljucaj
+        //uzmi element iz listi zahteva ako ga ima
+        //postoji specijalni zahtev koji je uslov za gasenje
+        //otkljucaj
+        //obradi
+    }
 }
