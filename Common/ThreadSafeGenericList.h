@@ -154,7 +154,7 @@ bool DeleteNode(NODE** head, void* toDelete, size_t size) {
             prev = current;
             current = current->next;
         }
-        ReleaseMutex(current->mutex);
+        ReleaseMutex(prev->mutex);
     }
     free(target);
     free(data);
