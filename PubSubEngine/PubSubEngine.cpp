@@ -8,8 +8,8 @@
 #include "WorkerStruct.h"
 
 //#include "../Common/LinkedList.h";
-//#include "../Common/GenericList.h";
-#include "../Common/ThreadSafeGenericList.h";
+#include "../Common/GenericList.h";
+//#include "../Common/ThreadSafeGenericList.h";
 #include "../Common/Measurment.h";
 #include "../TCPLib/TCPLib.cpp";
 
@@ -41,6 +41,7 @@ bool InitCriticalSections();
 //DWORD WINAPI Work(LPVOID);
 DWORD WINAPI DoWork(LPVOID);
 DWORD WINAPI InitWorkerThreads(LPVOID);
+bool Work(int, char*);
 
 fd_set readfds;
 SOCKET listenSocket = INVALID_SOCKET;
@@ -52,6 +53,7 @@ CRITICAL_SECTION CSAnalogData;
 CRITICAL_SECTION CSStatusData;
 CRITICAL_SECTION CSAnalogSubs;
 CRITICAL_SECTION CSStatusSubs;
+CRITICAL_SECTION CSWorkerTasks;
 
 
 NODE *publisherList = NULL;
@@ -60,6 +62,7 @@ NODE *statusData = NULL;
 NODE *analogData = NULL;
 NODE *statusSubscribers = NULL;
 NODE *analogSubscribers = NULL;
+NODE *workerTasks = NULL;
 
 
 HANDLE listenHandle;
@@ -84,11 +87,14 @@ int main()
     listenHandle        = CreateThread(NULL, 0, &Listen, (LPVOID)0, 0, &listenID);
     workerManagerHandle = CreateThread(NULL, 0, &InitWorkerThreads, (LPVOID)0, 0, &workerID);
 
-
+    if (workerManagerHandle) {
+        WaitForSingleObject(workerManagerHandle, INFINITE);
+    }
     //Listen();
     if (listenHandle) {
         WaitForSingleObject(listenHandle, INFINITE);
     }
+   
 
 
     getchar();
@@ -156,11 +162,21 @@ int Init() {
 }
 
 
-DWORD WINAPI InitWorkerThreads() {
+DWORD WINAPI InitWorkerThreads(LPVOID params) {
     for (int i = 0; i < MAX_THREADS; ++i) {
         workerHandles[i] = CreateThread(NULL, 0, &DoWork, (LPVOID)0, 0, NULL);
         if (workerHandles[i] == 0) {
+            printf("WorkerManager failed at creating a worker thread.");
             return false;
+        }
+    }
+
+    if (WaitForMultipleObjects(MAX_THREADS, workerHandles, TRUE, INFINITE) != WAIT_OBJECT_0 + MAX_THREADS - 1) { //TODO make sure math is correct 
+        //all worker threads succesfully finished, close them
+        printf("\nMomci zavrseni\n");
+        for (int i = 0; i < MAX_THREADS; ++i) {
+            SAFE_DELETE_HANDLE(workerHandles[i]);
+            workerHandles[i] = 0;
         }
     }
 
@@ -176,6 +192,7 @@ bool InitCriticalSections() {
     InitializeCriticalSection(&CSStatusData);
     InitializeCriticalSection(&CSAnalogSubs);
     InitializeCriticalSection(&CSStatusSubs);
+    InitializeCriticalSection(&CSWorkerTasks);
 
     return true;
 }
@@ -210,7 +227,7 @@ DWORD WINAPI Listen(LPVOID param) {
         int value = select(0, &readfds, NULL, NULL, &timeVal);
 
         if (value == 0) {
-            //pass
+            Sleep(250);
         }
         else if (value == SOCKET_ERROR) {
             //Greska prilikom poziva funkcije, odbaci sokete sa greskom
@@ -247,21 +264,22 @@ DWORD WINAPI Listen(LPVOID param) {
                 }
                 
             }
-            //else { //servis prima poruku
-            ProcessMessages();
-            //}
+            else { //servis prima poruku
+                ProcessMessages();
+            }
 
         }
     }
 
 }
 
-DWORD WINAPI Work(LPVOID lparams) {
-    WorkerData *wData = (WorkerData*)lparams;
+bool Work(int i, char *data) {
+    //WorkerData *wData = (WorkerData*)lparams;
 
-    int i = wData->i;
-    char *data = wData->data;
+    //int i = wData->i;
+    //char *data = wData->data;
 
+    //todo mozda lock oko ovoga?
     bool succes = TCPReceive(acceptedSockets[i], data, sizeof(Measurment));
 
     if (!succes) { //always close this socket?
@@ -276,7 +294,7 @@ DWORD WINAPI Work(LPVOID lparams) {
         closesocket(acceptedSockets[i]);
         acceptedSockets[i] = INVALID_SOCKET;
         //continue;
-        return 0;
+        return false;
     }
 
     SOCKET* ptr = &acceptedSockets[i];
@@ -309,6 +327,8 @@ DWORD WINAPI Work(LPVOID lparams) {
         ProcessMeasurment(newMeasurment);
         free(newMeasurment);
     }
+
+    return true;
 }
 
 
@@ -413,10 +433,17 @@ void ProcessMessages() {
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (FD_ISSET(acceptedSockets[i], &readfds)) {
            
-            //TODO sad napravi thread da ovo obradi
-            //CallWorkerTask(i, data);
+            
+            WorkerData* taskData = (WorkerData*)malloc(sizeof(WorkerData));
+            taskData->i = i;
+            taskData->data = data;
 
+            EnterCriticalSection(&CSWorkerTasks);
+            printf("Pravim novi task za i = %d\n", i);
+            GenericListPushAtStart(&workerTasks, taskData, sizeof(WorkerData));
+            LeaveCriticalSection(&CSWorkerTasks);
 
+            free(taskData);
         }
     }
     free(data);
@@ -476,6 +503,7 @@ void Shutdown() {
     DeleteCriticalSection(&CSAnalogData);
     DeleteCriticalSection(&CSStatusSubs);
     DeleteCriticalSection(&CSAnalogSubs);
+    DeleteCriticalSection(&CSWorkerTasks);
 
 
 
@@ -523,12 +551,31 @@ void SendToNewSubscriber(SOCKET sub, NODE *dataHead) {
 }
 
 
-DWORD WINAPI DoWork(LPVOID) {
+DWORD WINAPI DoWork(LPVOID params) {
+    WorkerData* wData = (WorkerData*)malloc(sizeof(WorkerData));
+    bool execute = false;
     while (true) {
         //zakljucaj
         //uzmi element iz listi zahteva ako ga ima
         //postoji specijalni zahtev koji je uslov za gasenje
         //otkljucaj
         //obradi
+
+        EnterCriticalSection(&CSWorkerTasks);
+        if (workerTasks != NULL) {
+            memcpy(wData, workerTasks->data, sizeof(WorkerData));
+            DeleteNode(&workerTasks, workerTasks->data, sizeof(WorkerData));
+            execute = true;
+        }
+        LeaveCriticalSection(&CSWorkerTasks);
+        if (execute) {
+            //printf("Obradjujem zahtev sa i = %d \ni char *data = %s\n", wData->i, wData->data);
+            Work(wData->i, wData->data);
+            execute = false;
+        }
+        Sleep(100);
+
     }
+    free(wData);
+    return true;
 }
