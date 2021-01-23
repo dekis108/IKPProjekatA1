@@ -29,7 +29,7 @@ bool Connect();
 Measurment *GenerateMeasurment();
 Measurment *CreateMeasurment();
 bool IntroduceMyself();
-void SendMeasurment();
+void SendMeasurment(int publishingType);
 
 SOCKET connectSocket = INVALID_SOCKET;
 sockaddr_in serverAddress;
@@ -44,11 +44,23 @@ int main()
         getchar();
         return result;
     }
+    printf("Client initialised.");
+    int picked = 0;
+    while (true)
+    {
+        printf(" Pick a way of publishing:\n1)Randomly generated message\n2)User created message\n");
+        scanf("%d", &picked);
+        if (picked != 1 && picked != 2) {
+            printf("Please pick a valid publishing type.");
+        }
+        else {
+            break;
+        }
+    }
 
-    printf("Client initialised. Press enter to start publishing\n");
     getchar();
     
-    SendMeasurment();
+    SendMeasurment(picked);
     
     getchar();
 
@@ -57,12 +69,23 @@ int main()
 /// <summary>
 /// Function that sends randomly generated Measurment every 1001 ms by using a sending function from TCPLib.
 /// </summary>
-void SendMeasurment() {
+void SendMeasurment(int publishingType) {
     while (true) {
         printf("Sending...\n");
-
+        Measurment* m = (Measurment *)malloc(sizeof(Measurment));
+        switch (publishingType)
+        {
+        case 1:
+             m = GenerateMeasurment();
+             break;
+        case 2:
+             m = CreateMeasurment();
+             break;
+        default:
+            break;
+        }
         //Measurment* m = GenerateMeasurment();
-        Measurment* m = CreateMeasurment();
+        //Measurment* m = CreateMeasurment();
         if (TCPSend(connectSocket, *m)) {
             printf("Sent: %s %s %d \n", GetStringFromEnumHelper(m->topic), GetStringFromEnumHelper(m->type), m->value);
         }
