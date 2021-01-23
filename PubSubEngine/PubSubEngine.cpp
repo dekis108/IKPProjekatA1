@@ -20,7 +20,7 @@
 #define MAX_CLIENTS 10
 #define MAX_THREADS 16
 #define TIMEVAL_SEC 0
-#define TIMEVAL_USEC 0
+#define TIMEVAL_USEC 500
 
 #define SAFE_DELETE_HANDLE(a)  if(a){CloseHandle(a);}
 
@@ -41,7 +41,7 @@ bool InitCriticalSections();
 //DWORD WINAPI Work(LPVOID);
 DWORD WINAPI DoWork(LPVOID);
 DWORD WINAPI InitWorkerThreads(LPVOID);
-bool Work(int, char*);
+bool Work(int);
 
 fd_set readfds;
 SOCKET listenSocket = INVALID_SOCKET;
@@ -227,7 +227,7 @@ DWORD WINAPI Listen(LPVOID param) {
         int value = select(0, &readfds, NULL, NULL, &timeVal);
 
         if (value == 0) {
-            Sleep(250);
+            //pass...
         }
         else if (value == SOCKET_ERROR) {
             //Greska prilikom poziva funkcije, odbaci sokete sa greskom
@@ -264,25 +264,25 @@ DWORD WINAPI Listen(LPVOID param) {
                 }
                 
             }
-            else { //servis prima poruku
-                ProcessMessages();
-            }
+            ProcessMessages();
 
+            Sleep(750);
         }
     }
 
 }
 
-bool Work(int i, char *data) {
+bool Work(int i) {
     //WorkerData *wData = (WorkerData*)lparams;
 
     //int i = wData->i;
     //char *data = wData->data;
 
     //todo mozda lock oko ovoga?
-    bool succes = TCPReceive(acceptedSockets[i], data, sizeof(Measurment));
+    char* data = (char*)malloc(sizeof(Measurment));
+    int succes = TCPReceive(acceptedSockets[i], data, sizeof(Measurment));
 
-    if (!succes) { //always close this socket?
+    if (succes == 0) { //always close this socket?
         EnterCriticalSection(&CSAnalogSubs);
         DeleteNode(&analogSubscribers, &acceptedSockets[i], sizeof(SOCKET));
         LeaveCriticalSection(&CSAnalogSubs);
@@ -294,6 +294,12 @@ bool Work(int i, char *data) {
         closesocket(acceptedSockets[i]);
         acceptedSockets[i] = INVALID_SOCKET;
         //continue;
+        free(data);
+        return false;
+    }
+    else if (succes == 2) {
+        //nepotreban poziv, nikom nista, WSAWOULDBLOCK
+        free(data);
         return false;
     }
 
@@ -328,6 +334,7 @@ bool Work(int i, char *data) {
         free(newMeasurment);
     }
 
+    free(data);
     return true;
 }
 
@@ -429,14 +436,14 @@ void SetAcceptedSocketsInvalid() {
 * ProccessMeasurment for processing data.
 */
 void ProcessMessages() {
-    char* data = (char*)malloc(sizeof(Measurment));
+    //char* data = (char*)malloc(sizeof(Measurment));
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (FD_ISSET(acceptedSockets[i], &readfds)) {
            
             
             WorkerData* taskData = (WorkerData*)malloc(sizeof(WorkerData));
             taskData->i = i;
-            taskData->data = data;
+            //taskData->data = data;
 
             EnterCriticalSection(&CSWorkerTasks);
             printf("Pravim novi task za i = %d\n", i);
@@ -446,7 +453,7 @@ void ProcessMessages() {
             free(taskData);
         }
     }
-    free(data);
+    //free(data);
 }
 
 /*
@@ -570,10 +577,10 @@ DWORD WINAPI DoWork(LPVOID params) {
         LeaveCriticalSection(&CSWorkerTasks);
         if (execute) {
             //printf("Obradjujem zahtev sa i = %d \ni char *data = %s\n", wData->i, wData->data);
-            Work(wData->i, wData->data);
+            Work(wData->i);
             execute = false;
         }
-        Sleep(100);
+        Sleep(1000);
 
     }
     free(wData);

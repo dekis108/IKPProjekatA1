@@ -21,6 +21,7 @@
 #define ADDRESS "127.0.0.1"
 #define TYPE_STRING_LENGHT 10
 #define DEMOTESTCOUNT 20
+#define SLEEP_TIME 1001
 
 int Init();
 bool InitializeWindowsSockets();
@@ -59,17 +60,17 @@ int main()
 /// </summary>
 void SendMeasurment() {
     while (true) {
-        printf("Sending...\n");
-
+ 
         Measurment* m = GenerateMeasurment();
+        printf("Sending: %s %s %d \n", GetStringFromEnumHelper(m->topic), GetStringFromEnumHelper(m->type), m->value);
         if (TCPSend(connectSocket, *m)) {
-            printf("Sent: %s %s %d \n", GetStringFromEnumHelper(m->topic), GetStringFromEnumHelper(m->type), m->value);
+            printf("Sent\n");
         }
         else {
-            printf("An error occured\n");
+            printf("An error occured %s\n", WSAGetLastError());
         }
         free(m);
-        Sleep(1001);
+        Sleep(SLEEP_TIME);
     }
 }
 
