@@ -29,7 +29,7 @@ bool Connect();
 Measurment *GenerateMeasurment();
 Measurment *CreateMeasurment();
 bool IntroduceMyself();
-void SendMeasurment(int publishingType);
+void SendMeasurment(int publishingType, int interval);
 
 SOCKET connectSocket = INVALID_SOCKET;
 sockaddr_in serverAddress;
@@ -46,12 +46,18 @@ int main()
     }
     printf("Client initialised.");
     int picked = 0;
+    int interval = 1000; //default interval
     while (true)
     {
         printf(" Pick a way of publishing:\n1)Randomly generated message\n2)User created message\n");
         scanf("%d", &picked);
         if (picked != 1 && picked != 2) {
             printf("Please pick a valid publishing type.");
+        }
+        else if (picked == 1) {
+            printf("Please pick an interval of publishing in ms: \n");
+            scanf("%d", &interval);
+            break;
         }
         else {
             break;
@@ -60,7 +66,7 @@ int main()
 
     getchar();
     
-    SendMeasurment(picked);
+    SendMeasurment(picked, interval);
     
     getchar();
 
@@ -69,7 +75,7 @@ int main()
 /// <summary>
 /// Function that sends randomly generated Measurment every 1001 ms by using a sending function from TCPLib.
 /// </summary>
-void SendMeasurment(int publishingType) {
+void SendMeasurment(int publishingType, int interval) {
     while (true) {
         printf("Sending...\n");
         Measurment* m = (Measurment *)malloc(sizeof(Measurment));
@@ -93,7 +99,7 @@ void SendMeasurment(int publishingType) {
             printf("An error occured\n");
         }
         free(m);
-        Sleep(1001);
+        Sleep(interval);
     }
 }
 
