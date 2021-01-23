@@ -35,7 +35,7 @@ bool TCPSend(SOCKET connectSocket, Measurment measurment) {
         //free(&measurment);
         if (WSAGetLastError() == WSAEWOULDBLOCK) {
             printf("[DEBUG] TCPSendMeasurment  WSAEWOULDBLOCK\n");
-            Sleep(WOULDBLOCKWAIT);
+            //Sleep(WOULDBLOCKWAIT);
             continue;
         }
         else if (iResult == SOCKET_ERROR)
@@ -59,7 +59,7 @@ bool TCPSend(SOCKET connectSocket, char *key) {
         int iResult = send(connectSocket, (const char*)key, sizeof(char), 0);
         if (WSAGetLastError() == WSAEWOULDBLOCK) {
             printf("[DEBUG] TCPSendChar WSAEWOULDBLOCK\n");
-            Sleep(WOULDBLOCKWAIT);
+            //Sleep(WOULDBLOCKWAIT);
             continue;
         }
         else if (iResult == SOCKET_ERROR)

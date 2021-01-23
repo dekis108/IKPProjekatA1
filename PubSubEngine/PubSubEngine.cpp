@@ -18,9 +18,9 @@
 #define DEFAULT_BUFLEN 1000
 #define DEFAULT_PORT "27016"
 #define MAX_CLIENTS 10
-#define MAX_THREADS 16
+#define MAX_THREADS 8
 #define TIMEVAL_SEC 0
-#define TIMEVAL_USEC 500
+#define TIMEVAL_USEC 0
 
 #define SAFE_DELETE_HANDLE(a)  if(a){CloseHandle(a);}
 
@@ -231,13 +231,14 @@ DWORD WINAPI Listen(LPVOID param) {
         }
         else if (value == SOCKET_ERROR) {
             //Greska prilikom poziva funkcije, odbaci sokete sa greskom
-            printf("select failed with error: %d\n", WSAGetLastError());
-            for (int i = 0; i < MAX_CLIENTS; i++) {
-                if (FD_ISSET(acceptedSockets[i], &readfds)) {
-                    closesocket(acceptedSockets[i]);
-                    acceptedSockets[i] = INVALID_SOCKET;
-                }
-            }
+            printf("[DEBUG] select failed with error: %d\ncontinueing...\n", WSAGetLastError());
+            continue;
+            //for (int i = 0; i < MAX_CLIENTS; i++) {
+            //    if (FD_ISSET(acceptedSockets[i], &readfds)) {
+            //        closesocket(acceptedSockets[i]);
+            //        acceptedSockets[i] = INVALID_SOCKET;
+            //    }
+            //}
         }
         else { //accept event
             if (FD_ISSET(listenSocket, &readfds)) {
@@ -266,7 +267,7 @@ DWORD WINAPI Listen(LPVOID param) {
             }
             ProcessMessages();
 
-            Sleep(10);
+            //Sleep(10);
         }
     }
 
@@ -318,14 +319,14 @@ bool Work(int i) {
         GenericListPushAtStart(&analogSubscribers, ptr, sizeof(SOCKET));
         SendToNewSubscriber(acceptedSockets[i], analogData);
         LeaveCriticalSection(&CSAnalogSubs);
-        printf("[DEBUG] Client %d subscribed to Analog", i);
+        printf("[DEBUG] Client %d subscribed to Analog\n", i);
     }
     else if (data[0] == 's') {
         EnterCriticalSection(&CSStatusSubs);
         GenericListPushAtStart(&statusSubscribers, ptr, sizeof(SOCKET));
         SendToNewSubscriber(acceptedSockets[i], statusData);
         LeaveCriticalSection(&CSStatusSubs);
-        printf("[DEBUG] Client %d subscribed to Status", i);
+        printf("[DEBUG] Client %d subscribed to Status\n", i);
     }
     else {
         //else message is Measurment data
@@ -471,14 +472,15 @@ void ProcessMeasurment(Measurment *m) {
     case Analog:
         EnterCriticalSection(&CSAnalogData);
         GenericListPushAtStart(&analogData, m, sizeof(Measurment));
-        UpdateSubscribers(m, analogSubscribers);
         LeaveCriticalSection(&CSAnalogData);
+        UpdateSubscribers(m, analogSubscribers);
         break;
     case Status:
         EnterCriticalSection(&CSStatusData);
         GenericListPushAtStart(&statusData, m, sizeof(Measurment));
-        UpdateSubscribers(m, statusSubscribers);
         LeaveCriticalSection(&CSStatusData);
+        UpdateSubscribers(m, statusSubscribers);
+
         break;
     default:
         printf("[ERROR] Topic %d not supported.", m->topic);
@@ -582,7 +584,7 @@ DWORD WINAPI DoWork(LPVOID params) {
             Work(wData->i);
             execute = false;
         }
-        Sleep(1000);
+        Sleep(1);
 
     }
     free(wData);
