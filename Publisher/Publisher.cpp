@@ -27,7 +27,7 @@ bool InitializeWindowsSockets();
 bool CreateSocket();
 bool Connect();
 Measurment *GenerateMeasurment();
-Measurment CreateMeasurment();
+Measurment *CreateMeasurment();
 bool IntroduceMyself();
 void SendMeasurment();
 
@@ -61,7 +61,8 @@ void SendMeasurment() {
     while (true) {
         printf("Sending...\n");
 
-        Measurment* m = GenerateMeasurment();
+        //Measurment* m = GenerateMeasurment();
+        Measurment* m = CreateMeasurment();
         if (TCPSend(connectSocket, *m)) {
             printf("Sent: %s %s %d \n", GetStringFromEnumHelper(m->topic), GetStringFromEnumHelper(m->type), m->value);
         }
@@ -113,17 +114,16 @@ Measurment * GenerateMeasurment() {
 /// Creates a Measurment structure by users input.
 /// </summary>
 /// <returns>Returns a Measurment.</returns>
-Measurment CreateMeasurment() {
+Measurment *CreateMeasurment() {
     Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
-    /*
     
-    printf("Enter topic");
+    printf("Enter topic\n");
     char topic[20];
     scanf("%s", topic);
-    printf("Enter type");
+    printf("Enter type\n");
     char type[20];
     scanf("%s", type);
-    printf("Enter value");
+    printf("Enter value\n");
     int val = 0;
     scanf("%d", &val);
 
@@ -145,13 +145,8 @@ Measurment CreateMeasurment() {
     }
 
     msg->value = val;
-    */
 
-    msg->topic = Analog;
-    msg->type = CRB;
-    msg->value = 15;
-
-    return *msg;
+    return msg;
 }
 
 /// <summary>

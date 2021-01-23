@@ -4,6 +4,8 @@
 #include<stdlib.h> 
 #include<windows.h>
 
+#define SAFE_DELETE_HANDLE(a)  if(a){CloseHandle(a);}
+
 /* A linked list node */
 typedef struct Node
 {
@@ -151,10 +153,11 @@ bool DeleteNode(NODE** head, void* toDelete, size_t size) {
                 free(target);
                 return true;
             }
+            ReleaseMutex(current->mutex);
             prev = current;
             current = current->next;
         }
-        ReleaseMutex(prev->mutex);
+        
     }
     free(target);
     free(data);
