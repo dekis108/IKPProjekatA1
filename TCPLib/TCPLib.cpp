@@ -92,14 +92,14 @@ int TCPReceive(SOCKET connectSocket, char* recvbuf, size_t len) {
         return 1;
     }
     else if (WSAGetLastError() == WSAEWOULDBLOCK) {
-        printf("[DEBUG] TCPReceive WSAEWOULDBLOCK\n");
-        Sleep(WOULDBLOCKWAIT);
+        //printf("[DEBUG] TCPReceive WSAEWOULDBLOCK\n");
+        //Sleep(WOULDBLOCKWAIT);
         return 2;
     }
     else if (iResult == SOCKET_ERROR)
     {
         // there was an error during recv
-        printf("recv failed with error: %d\n", WSAGetLastError());
+        //printf("recv failed with error: %d\n", WSAGetLastError());
         return 0;
     }
    

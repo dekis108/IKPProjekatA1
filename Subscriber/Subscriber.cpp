@@ -128,6 +128,7 @@ void Subscribe() {
         break;
     case '3':
         TCPSend(connectSocket, t1);
+        Sleep(100);
         TCPSend(connectSocket, t2);
         break;
     default:

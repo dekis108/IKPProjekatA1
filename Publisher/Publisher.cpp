@@ -21,7 +21,7 @@
 #define ADDRESS "127.0.0.1"
 #define TYPE_STRING_LENGHT 10
 #define DEMOTESTCOUNT 20
-#define SLEEP_TIME 1001
+#define SLEEP_TIME 50
 
 int Init();
 bool InitializeWindowsSockets();
@@ -35,6 +35,7 @@ void SendMeasurment();
 SOCKET connectSocket = INVALID_SOCKET;
 sockaddr_in serverAddress;
 
+int globalValue = 0;
 
 int main()
 {
@@ -81,19 +82,20 @@ void SendMeasurment() {
 Measurment * GenerateMeasurment() {
     Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
     enum MeasurmentTopic a = Analog;
-    msg->value = (rand() % 100) + 1; 
+    //msg->value = (rand() % 100) + 1;
+    msg->value = ++globalValue;
     int topic = (rand() % 2);
     int type = (rand() % 2);
     switch (topic) {
         case 0: 
             msg->topic = Analog;
-            msg->value = (rand() % 100);
+            //msg->value = (rand() % 100);
             break;
     
         case 1: 
             msg->topic = Status;
             msg->type = MER;
-            msg->value = (rand() % 5);
+            //msg->value = (rand() % 5);
             break;
     }
     if (msg->topic == Analog) {

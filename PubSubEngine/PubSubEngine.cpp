@@ -8,8 +8,8 @@
 #include "WorkerStruct.h"
 
 //#include "../Common/LinkedList.h";
-#include "../Common/GenericList.h";
-//#include "../Common/ThreadSafeGenericList.h";
+//#include "../Common/GenericList.h";
+#include "../Common/ThreadSafeGenericList.h";
 #include "../Common/Measurment.h";
 #include "../TCPLib/TCPLib.cpp";
 
@@ -266,7 +266,7 @@ DWORD WINAPI Listen(LPVOID param) {
             }
             ProcessMessages();
 
-            Sleep(750);
+            Sleep(10);
         }
     }
 
@@ -318,12 +318,14 @@ bool Work(int i) {
         GenericListPushAtStart(&analogSubscribers, ptr, sizeof(SOCKET));
         SendToNewSubscriber(acceptedSockets[i], analogData);
         LeaveCriticalSection(&CSAnalogSubs);
+        printf("[DEBUG] Client %d subscribed to Analog", i);
     }
     else if (data[0] == 's') {
         EnterCriticalSection(&CSStatusSubs);
         GenericListPushAtStart(&statusSubscribers, ptr, sizeof(SOCKET));
         SendToNewSubscriber(acceptedSockets[i], statusData);
         LeaveCriticalSection(&CSStatusSubs);
+        printf("[DEBUG] Client %d subscribed to Status", i);
     }
     else {
         //else message is Measurment data
@@ -446,7 +448,7 @@ void ProcessMessages() {
             //taskData->data = data;
 
             EnterCriticalSection(&CSWorkerTasks);
-            printf("Pravim novi task za i = %d\n", i);
+            //printf("[DEBUG] Pravim novi task za i = %d\n", i);
             GenericListPushAtStart(&workerTasks, taskData, sizeof(WorkerData));
             LeaveCriticalSection(&CSWorkerTasks);
 
@@ -461,7 +463,7 @@ void ProcessMessages() {
 * m = Measurment to be saved (by reference)
 */
 void ProcessMeasurment(Measurment *m) {
-    printf("[DEBUG] Service received: ");
+    //printf("[DEBUG] Service received: ");
     PrintMeasurment(m);
 
     switch (m->topic)
