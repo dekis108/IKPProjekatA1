@@ -9,6 +9,17 @@ Goal of this project is to demonstrate how client/server arhitecture can be para
 ## Arhitecture and Design
 System is comprised of three separate entities. First is the service component - PubSubEngine. Service component is built for servicing two types of clients: Publisher and Subscriber. General arhitecture of the system is client - server arhitecture with N number of clients (both publishers and subscribers) and one service. Protocol used for communication is TCP protocol. Separate static library is introduced - TCPLib and its functionalities are used for TCP communication between components. Data model that is used for storing data is Measurment structure and a generic list. Generic list is used for storing Measurment packets and client connection sockets in separate lists.
 
+[![2.png](https://i.postimg.cc/3JNXMBqS/2.png)](https://postimg.cc/56cYLwbL)
+
+## Threading logic 
+Listen thread is started so it can pick up client connections and store them in client lists. 
+Client lists are: 
+```c
+NODE *publisherList = NULL;
+NODE *subscriberList = NULL;
+```
+///DEJO OPISATI 
+
 ## Data Structures
 ### Measurment structure
 Structure has three fields: topic, type and value. Topics type is an enum with vlaues of Analog and Status. Types type is an enum with values of SWG,MER and CRB. Value is an integer. 
