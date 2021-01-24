@@ -18,7 +18,7 @@
 #define DEFAULT_BUFLEN 1000
 #define DEFAULT_PORT "27016"
 #define MAX_CLIENTS 10
-#define MAX_THREADS 8
+#define MAX_THREADS 16
 #define TIMEVAL_SEC 0
 #define TIMEVAL_USEC 0
 
@@ -87,6 +87,7 @@ int main()
     listenHandle        = CreateThread(NULL, 0, &Listen, (LPVOID)0, 0, &listenID);
     workerManagerHandle = CreateThread(NULL, 0, &InitWorkerThreads, (LPVOID)0, 0, &workerID);
 
+    /*
     if (workerManagerHandle) {
         WaitForSingleObject(workerManagerHandle, INFINITE);
     }
@@ -94,11 +95,18 @@ int main()
     if (listenHandle) {
         WaitForSingleObject(listenHandle, INFINITE);
     }
+    */
    
 
-
-    getchar();
-    Shutdown();
+    printf("Service running, press 'q' for shutdown\n");
+    while (true) {
+        char key = getchar();
+        if (key == 'q') {
+            Shutdown();
+            break;
+        }
+    }
+    return 0;
 }
 
 /*
@@ -173,7 +181,6 @@ DWORD WINAPI InitWorkerThreads(LPVOID params) {
 
     if (WaitForMultipleObjects(MAX_THREADS, workerHandles, TRUE, INFINITE) != WAIT_OBJECT_0 + MAX_THREADS - 1) { //TODO make sure math is correct 
         //all worker threads succesfully finished, close them
-        printf("\nMomci zavrseni\n");
         for (int i = 0; i < MAX_THREADS; ++i) {
             SAFE_DELETE_HANDLE(workerHandles[i]);
             workerHandles[i] = 0;
@@ -230,8 +237,7 @@ DWORD WINAPI Listen(LPVOID param) {
             //pass...
         }
         else if (value == SOCKET_ERROR) {
-            //Greska prilikom poziva funkcije, odbaci sokete sa greskom
-            printf("[DEBUG] select failed with error: %d\ncontinueing...\n", WSAGetLastError());
+            //printf("[DEBUG] select failed with error: %d\ncontinueing...\n", WSAGetLastError());
             continue;
             //for (int i = 0; i < MAX_CLIENTS; i++) {
             //    if (FD_ISSET(acceptedSockets[i], &readfds)) {
@@ -308,11 +314,11 @@ bool Work(int i) {
     //proveri da li je poruka predstavljanja
     if (data[0] == 'p') {
         //GenericListPushAtStart(&publisherList, ptr, sizeof(SOCKET));
-        printf("Connected client: publisher\n");
+        printf("[DEBUG] Connected client: publisher\n");
     }
     else if (data[0] == 'd') {
         //GenericListPushAtStart(&subscriberList, ptr, sizeof(SOCKET));
-        printf("Connected client: subscriber\n");
+        printf("[DEBUG] Connected client: subscriber\n");
     }
     else if (data[0] == 'a') {
         EnterCriticalSection(&CSAnalogSubs);
@@ -465,7 +471,7 @@ void ProcessMessages() {
 */
 void ProcessMeasurment(Measurment *m) {
     //printf("[DEBUG] Service received: ");
-    PrintMeasurment(m);
+    //PrintMeasurment(m);
 
     switch (m->topic)
     {
@@ -492,34 +498,52 @@ void ProcessMeasurment(Measurment *m) {
 * Frees program memory, handles and performs WSA shutdown logic.
 */
 void Shutdown() {
+    printf("[INFO] Shuting down..\n");
+
+    printf("[INFO] Closing all handles..\n");
+    TerminateThread(listenHandle, NULL);
+    TerminateThread(workerManagerHandle, NULL);
+    SAFE_DELETE_HANDLE(listenHandle);
+    SAFE_DELETE_HANDLE(workerManagerHandle);
+    for (int i = 0; i < MAX_THREADS; ++i) {
+        TerminateThread(workerHandles[i], NULL);
+        SAFE_DELETE_HANDLE(workerHandles[i]);
+    }
+    printf("[INFO] Done\n");
+
+    printf("[INFO] Closing all sockets..\n");
     closesocket(listenSocket);
     for (int i = 0; i < MAX_CLIENTS; ++i) {
-        closesocket(acceptedSockets[i]);
+        if (acceptedSockets[i] != INVALID_SOCKET) {
+            closesocket(acceptedSockets[i]);
+        }
     }
     WSACleanup();
+    printf("[INFO] Done\n");
 
+
+    printf("[INFO] Deleting all data.. \n");
     FreeGenericList(&publisherList);
     FreeGenericList(&subscriberList);
     FreeGenericList(&statusData);
     FreeGenericList(&analogData);
     FreeGenericList(&statusSubscribers);
     FreeGenericList(&analogSubscribers);
+    FreeGenericList(&workerTasks);
+    printf("[INFO] Done\n");
 
-    SAFE_DELETE_HANDLE(listenHandle);
-    for (int i = 0; i < MAX_THREADS; ++i) {
-        SAFE_DELETE_HANDLE(workerHandles[i]);
-    }
-    
+    printf("[INFO] Deleting all critical sections.. \n");
     DeleteCriticalSection(&CSStatusData);
     DeleteCriticalSection(&CSAnalogData);
     DeleteCriticalSection(&CSStatusSubs);
     DeleteCriticalSection(&CSAnalogSubs);
     DeleteCriticalSection(&CSWorkerTasks);
+    printf("[INFO] Done\n");
 
 
 
-    printf("Service freed all memory.");
-    getchar();
+    printf("[INFO] Service freed all memory.\n");
+    return;
 }
 
 
@@ -563,7 +587,7 @@ void SendToNewSubscriber(SOCKET sub, NODE *dataHead) {
 
 
 DWORD WINAPI DoWork(LPVOID params) {
-    WorkerData* wData = (WorkerData*)malloc(sizeof(WorkerData));
+    WorkerData* wData = NULL;
     bool execute = false;
     while (true) {
         //zakljucaj
@@ -574,6 +598,7 @@ DWORD WINAPI DoWork(LPVOID params) {
 
         EnterCriticalSection(&CSWorkerTasks);
         if (workerTasks != NULL) {
+            WorkerData* wData = (WorkerData*)malloc(sizeof(WorkerData));
             memcpy(wData, workerTasks->data, sizeof(WorkerData));
             DeleteNode(&workerTasks, workerTasks->data, sizeof(WorkerData));
             execute = true;
@@ -582,12 +607,12 @@ DWORD WINAPI DoWork(LPVOID params) {
         if (execute) {
             //printf("Obradjujem zahtev sa i = %d \ni char *data = %s\n", wData->i, wData->data);
             Work(wData->i);
+            free(wData);
             execute = false;
         }
         if (workerTasks == NULL) {
-            Sleep(10);
+            Sleep(500);
         }
     }
-    free(wData);
     return true;
 }
