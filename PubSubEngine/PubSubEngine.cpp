@@ -584,8 +584,9 @@ DWORD WINAPI DoWork(LPVOID params) {
             Work(wData->i);
             execute = false;
         }
-        //Sleep(1);
-
+        if (workerTasks == NULL) {
+            Sleep(10);
+        }
     }
     free(wData);
     return true;

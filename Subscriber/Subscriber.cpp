@@ -55,7 +55,7 @@ DWORD WINAPI Receive(LPVOID param) {
         }
         PrintMeasurment(newMeasurment);
         free(newMeasurment);
-        Sleep(10);
+        //Sleep(10);
     }
 }
 
