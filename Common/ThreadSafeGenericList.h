@@ -71,26 +71,31 @@ void PrintGenericList(NODE* node, void (*fptr)(void*))
 * Frees all the memory taken by list.
 */
 void FreeGenericList(NODE** head) {
-    if (*head == NULL) {
+    NODE* temp = *head;
+    if (temp == NULL) {
         return;
     }
 
-    NODE* next = (*head)->next;
-    DWORD dwWaitResult = WaitForSingleObject(
-                        (*head)->mutex,    // handle to mutex
-                        INFINITE);  // no time-out interval
-    if (dwWaitResult == WAIT_OBJECT_0) {
-        free((*head)->data);
-        (*head)->data = NULL;
-        (*head)->next = NULL;
-        free(*head);
-        *head = NULL;
-        //release mutex on null??
+    NODE* next;
+    DWORD dwWaitResult;
+    while (temp != NULL) {
+
+        dwWaitResult = WaitForSingleObject(
+            temp->mutex,    // handle to mutex
+            INFINITE);  // no time-out interval
+
+        if (dwWaitResult == WAIT_OBJECT_0) {
+            next = temp->next;
+            free(temp->data);
+            temp->data = NULL;
+            temp->next = NULL;
+            free(temp);
+            temp = next;
+            //release mutex on null??
+        }
     }
 
-    if (next != NULL) {
-        FreeGenericList(&next);
-    }
+    *head = NULL;
 }
 
 /*

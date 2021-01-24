@@ -500,6 +500,18 @@ void ProcessMeasurment(Measurment *m) {
 void Shutdown() {
     printf("[INFO] Shuting down..\n");
 
+    printf("[INFO] Closing all sockets..\n");
+    closesocket(listenSocket);
+    for (int i = 0; i < MAX_CLIENTS; ++i) {
+        if (acceptedSockets[i] != INVALID_SOCKET) {
+            closesocket(acceptedSockets[i]);
+        }
+    }
+    WSACleanup();
+    printf("[INFO] Done\n");
+
+
+
     printf("[INFO] Closing all handles..\n");
     TerminateThread(listenHandle, NULL);
     TerminateThread(workerManagerHandle, NULL);
@@ -511,15 +523,6 @@ void Shutdown() {
     }
     printf("[INFO] Done\n");
 
-    printf("[INFO] Closing all sockets..\n");
-    closesocket(listenSocket);
-    for (int i = 0; i < MAX_CLIENTS; ++i) {
-        if (acceptedSockets[i] != INVALID_SOCKET) {
-            closesocket(acceptedSockets[i]);
-        }
-    }
-    WSACleanup();
-    printf("[INFO] Done\n");
 
 
     printf("[INFO] Deleting all data.. \n");
@@ -587,7 +590,6 @@ void SendToNewSubscriber(SOCKET sub, NODE *dataHead) {
 
 
 DWORD WINAPI DoWork(LPVOID params) {
-    WorkerData* wData = NULL;
     bool execute = false;
     while (true) {
         //zakljucaj
@@ -595,10 +597,9 @@ DWORD WINAPI DoWork(LPVOID params) {
         //postoji specijalni zahtev koji je uslov za gasenje
         //otkljucaj
         //obradi
-
+        WorkerData* wData = (WorkerData*)malloc(sizeof(WorkerData));
         EnterCriticalSection(&CSWorkerTasks);
         if (workerTasks != NULL) {
-            WorkerData* wData = (WorkerData*)malloc(sizeof(WorkerData));
             memcpy(wData, workerTasks->data, sizeof(WorkerData));
             DeleteNode(&workerTasks, workerTasks->data, sizeof(WorkerData));
             execute = true;
@@ -607,12 +608,12 @@ DWORD WINAPI DoWork(LPVOID params) {
         if (execute) {
             //printf("Obradjujem zahtev sa i = %d \ni char *data = %s\n", wData->i, wData->data);
             Work(wData->i);
-            free(wData);
             execute = false;
         }
         if (workerTasks == NULL) {
             Sleep(500);
         }
+        free(wData);
     }
     return true;
 }
