@@ -28,9 +28,9 @@ bool InitializeWindowsSockets();
 bool CreateSocket();
 bool Connect();
 Measurment *GenerateMeasurment();
-Measurment CreateMeasurment();
+Measurment *CreateMeasurment();
 bool IntroduceMyself();
-void SendMeasurment();
+void SendMeasurment(int publishingType);
 
 SOCKET connectSocket = INVALID_SOCKET;
 sockaddr_in serverAddress;
@@ -46,11 +46,23 @@ int main()
         getchar();
         return result;
     }
+    printf("Client initialised.");
+    int picked = 0;
+    while (true)
+    {
+        printf(" Pick a way of publishing:\n1)Randomly generated message\n2)User created message\n");
+        scanf("%d", &picked);
+        if (picked != 1 && picked != 2) {
+            printf("Please pick a valid publishing type.");
+        }
+        else {
+            break;
+        }
+    }
 
-    printf("Client initialised. Press enter to start publishing\n");
     getchar();
     
-    SendMeasurment();
+    SendMeasurment(picked);
     
     getchar();
 
@@ -59,11 +71,23 @@ int main()
 /// <summary>
 /// Function that sends randomly generated Measurment every 1001 ms by using a sending function from TCPLib.
 /// </summary>
-void SendMeasurment() {
+void SendMeasurment(int publishingType) {
     while (true) {
- 
-        Measurment* m = GenerateMeasurment();
-        printf("Sending: %s %s %d \n", GetStringFromEnumHelper(m->topic), GetStringFromEnumHelper(m->type), m->value);
+        printf("Sending...\n");
+        Measurment* m = (Measurment *)malloc(sizeof(Measurment));
+        switch (publishingType)
+        {
+        case 1:
+             m = GenerateMeasurment();
+             break;
+        case 2:
+             m = CreateMeasurment();
+             break;
+        default:
+            break;
+        }
+        //Measurment* m = GenerateMeasurment();
+        //Measurment* m = CreateMeasurment();
         if (TCPSend(connectSocket, *m)) {
             printf("Sent\n");
         }
@@ -116,17 +140,16 @@ Measurment * GenerateMeasurment() {
 /// Creates a Measurment structure by users input.
 /// </summary>
 /// <returns>Returns a Measurment.</returns>
-Measurment CreateMeasurment() {
+Measurment *CreateMeasurment() {
     Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
-    /*
     
-    printf("Enter topic");
+    printf("Enter topic\n");
     char topic[20];
     scanf("%s", topic);
-    printf("Enter type");
+    printf("Enter type\n");
     char type[20];
     scanf("%s", type);
-    printf("Enter value");
+    printf("Enter value\n");
     int val = 0;
     scanf("%d", &val);
 
@@ -148,13 +171,8 @@ Measurment CreateMeasurment() {
     }
 
     msg->value = val;
-    */
 
-    msg->topic = Analog;
-    msg->type = CRB;
-    msg->value = 15;
-
-    return *msg;
+    return msg;
 }
 
 /// <summary>
