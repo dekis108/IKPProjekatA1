@@ -21,7 +21,7 @@
 #define ADDRESS "127.0.0.1"
 #define TYPE_STRING_LENGHT 10
 #define DEMOTESTCOUNT 20
-#define SLEEP_TIME 250
+#define SLEEP_TIME 5
 
 int Init();
 bool InitializeWindowsSockets();
