@@ -73,7 +73,7 @@ int main()
 /// </summary>
 void SendMeasurment(int publishingType) {
     while (true) {
-        printf("Sending...\n");
+      
         Measurment* m = (Measurment *)malloc(sizeof(Measurment));
         switch (publishingType)
         {
@@ -88,6 +88,8 @@ void SendMeasurment(int publishingType) {
         }
         //Measurment* m = GenerateMeasurment();
         //Measurment* m = CreateMeasurment();
+        printf("Sending: ");
+        PrintMeasurment(m);
         if (TCPSend(connectSocket, *m)) {
             printf("Sent\n");
         }
