@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <conio.h>
+#include <time.h>
 
 #include "../Common/Measurment.h";
 #include "../TCPLib/TCPLib.cpp";

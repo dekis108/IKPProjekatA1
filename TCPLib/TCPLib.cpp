@@ -19,6 +19,7 @@
 
 #include "../Common/LinkedList.h";
 #include "../Common/Measurment.h";
+#include "../TCPLib/TCPLib.h";
 
 #pragma comment(lib,"WS2_32")
 
