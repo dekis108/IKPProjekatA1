@@ -71,34 +71,11 @@ void FreeGenericList(NODE **head) {
 }
 
 /*
-void DeleteNode(NODE ** head, void * toDelete) {
-    NODE* current = *head;
-    char* toDeleteBytes;
-    char* currentBytes;
-    bool found = false;
-    memcpy(toDeleteBytes, toDelete, sizeof(toDelete));
-    while (current != NULL) {
-        memcpy(currentBytes, current, sizeof(current));
-        for (int i = 0; i < sizeof(toDelete); i++) {
-            if (toDeleteBytes[i] != currentBytes[i]) {
-                found = false;
-            }
-            else {
-                found = true;
-            }
-            if (i == sizeof(toDelete) && found == true) {
-                NODE* temp;
-                temp = current->next;
-                current->next = temp->next;
-                free(temp);
-                break;
-            }
-        }
-        current = current->next;
-    }
-}
+* Deletes and frees the node with the toDelete data.
+* **head = list head address
+* *toDelete = delete by value
+* size = size of the data 
 */
-
 bool DeleteNode(NODE** head, void* toDelete, size_t size ) {
     NODE* current = *head;
     if (current == NULL) {

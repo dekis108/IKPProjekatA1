@@ -37,8 +37,6 @@ void Shutdown();
 void UpdateSubscribers(Measurment*, NODE *);
 void SendToNewSubscriber(SOCKET, NODE*);
 bool InitCriticalSections();
-//void CallWorkerTask(int, char*);
-//DWORD WINAPI Work(LPVOID);
 DWORD WINAPI DoWork(LPVOID);
 DWORD WINAPI InitWorkerThreads(LPVOID);
 bool Work(int);
@@ -87,17 +85,6 @@ int main()
     listenHandle        = CreateThread(NULL, 0, &Listen, (LPVOID)0, 0, &listenID);
     workerManagerHandle = CreateThread(NULL, 0, &InitWorkerThreads, (LPVOID)0, 0, &workerID);
 
-    /*
-    if (workerManagerHandle) {
-        WaitForSingleObject(workerManagerHandle, INFINITE);
-    }
-    //Listen();
-    if (listenHandle) {
-        WaitForSingleObject(listenHandle, INFINITE);
-    }
-    */
-   
-
     printf("Service running, press 'q' for shutdown\n");
     while (true) {
         char key = getchar();
@@ -109,39 +96,11 @@ int main()
     return 0;
 }
 
-/*
-void CallWorkerTask(int i, char *data) {
-
-    while (true) {
-        for (int k = 0; k < MAX_THREADS; ++k) {
-            if (workerHandles[k] != 0) {
-                continue;
-            }
-
-            WorkerData* wData = (WorkerData *)malloc(sizeof(WorkerData));
-            wData->i = i;
-            wData->data = data;
-
-            workerHandles[i] = CreateThread(NULL, 0, &Work, wData, 0, NULL);
-            if (workerHandles[i] == 0) {
-                printf("Erorr while creating a worker thread. Shutting down..");
-                Shutdown();
-            }
-            return;
-        }
-        printf("No avaliable thread for message proccessing, consider increasing thread count.Waiting..\n");
-        Sleep(1000);
-    }
-}
-*/
-
 
 /*
 * Initialises the service and setups listen and accepted sockets.
 */
 int Init() {
-    //init_list(&listHead);
-
     if (InitializeWindowsSockets() == false)
     {
         return 1;
@@ -170,6 +129,10 @@ int Init() {
 }
 
 
+/*
+* Initializes MAX_THREADS instances of worker threads. 
+* No argument needed.
+*/
 DWORD WINAPI InitWorkerThreads(LPVOID params) {
     for (int i = 0; i < MAX_THREADS; ++i) {
         workerHandles[i] = CreateThread(NULL, 0, &DoWork, (LPVOID)0, 0, NULL);
@@ -206,7 +169,7 @@ bool InitCriticalSections() {
 }
 
 /*
-* After the serice is initialised, enter the listening state.
+* After the service is initialised, enter the listening state.
 */
 DWORD WINAPI Listen(LPVOID param) {
 
@@ -240,12 +203,6 @@ DWORD WINAPI Listen(LPVOID param) {
         else if (value == SOCKET_ERROR) {
             //printf("[DEBUG] select failed with error: %d\ncontinueing...\n", WSAGetLastError());
             continue;
-            //for (int i = 0; i < MAX_CLIENTS; i++) {
-            //    if (FD_ISSET(acceptedSockets[i], &readfds)) {
-            //        closesocket(acceptedSockets[i]);
-            //        acceptedSockets[i] = INVALID_SOCKET;
-            //    }
-            //}
         }
         else { //accept event
             if (FD_ISSET(listenSocket, &readfds)) {
@@ -258,35 +215,31 @@ DWORD WINAPI Listen(LPVOID param) {
                             printf("accept failed with error: %d\n", WSAGetLastError());
                             closesocket(acceptedSockets[i]);
                             acceptedSockets[i] = INVALID_SOCKET;
-                            //closesocket(listenSocket);
-                            //WSACleanup();
                             return 0;
                         }
 
                         break;
                     }
                 }
-                //ako mu ne nadje mesto uradi nesto
                 if (i == MAX_CLIENTS) {
                    // printf("Nema mesta za jos jednu konekciju.\n");
                 }
                 
             }
             ProcessMessages();
-
-            //Sleep(10);
         }
     }
 
 }
 
+/*
+* Checks accepted sockets that raised an event and 
+* calls TCPLib.TCPReceiveMeasurment to processes the message. 
+* Fills publishers and subrscribers list for introducment messages and calls
+* ProccessMeasurment for processing data.
+* i = index of the accpetedSocket that raised the event flag.
+*/
 bool Work(int i) {
-    //WorkerData *wData = (WorkerData*)lparams;
-
-    //int i = wData->i;
-    //char *data = wData->data;
-
-    //todo mozda lock oko ovoga?
     char* data = (char*)malloc(sizeof(Measurment));
     int succes = TCPReceive(acceptedSockets[i], data, sizeof(Measurment));
 
@@ -301,7 +254,6 @@ bool Work(int i) {
 
         closesocket(acceptedSockets[i]);
         acceptedSockets[i] = INVALID_SOCKET;
-        //continue;
         free(data);
         return false;
     }
@@ -440,10 +392,8 @@ void SetAcceptedSocketsInvalid() {
 
 
 /*
-* Checks accepted sockets that raised an event and 
-* calls TCPLib.TCPReceiveMeasurment to processes the message. 
-* Fills publishers and subrscribers list for introducment messages and calls
-* ProccessMeasurment for processing data.
+* Creates a instance of WorkerData and fills it in the workerTasks list.
+* Task is then to be done by a worker thread.
 */
 void ProcessMessages() {
     //char* data = (char*)malloc(sizeof(Measurment));
@@ -544,8 +494,6 @@ void Shutdown() {
     DeleteCriticalSection(&CSWorkerTasks);
     printf("[INFO] Done\n");
 
-
-
     printf("[INFO] Service freed all memory.\n");
     return;
 }
@@ -589,7 +537,10 @@ void SendToNewSubscriber(SOCKET sub, NODE *dataHead) {
     free(data);
 }
 
-
+/*
+* Infinite loop performed by worker threads. Work is initiated through creation of worker tasks.
+* No argument needed.
+*/
 DWORD WINAPI DoWork(LPVOID params) {
     bool execute = false;
     while (true) {

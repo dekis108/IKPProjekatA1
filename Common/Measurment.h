@@ -28,6 +28,9 @@ const char* GetStringFromEnumHelper(Topic topic) {
 }
 
 
+/*
+* Get string representation from enum object, can't do it better in c.
+*/
 const char* GetStringFromEnumHelper(Type type) {
 	const char* strings[] = { "SWG", "CRB", "MER" };
 	return strings[type];
@@ -35,7 +38,8 @@ const char* GetStringFromEnumHelper(Type type) {
 
 
 /*
-* Print measurment struct, specifically to be used by the generic list.
+* Print measurment struct.
+* *m = pointer to the Measurment to be printed
 */
 void PrintMeasurment(Measurment * m) {
     printf("Measurment: ");
