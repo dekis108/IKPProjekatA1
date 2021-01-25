@@ -8,8 +8,8 @@
 #include "WorkerStruct.h"
 
 //#include "../Common/LinkedList.h";
-//#include "../Common/GenericList.h";
-#include "../Common/ThreadSafeGenericList.h";
+#include "../Common/GenericList.h";
+//#include "../Common/ThreadSafeGenericList.h";
 #include "../Common/Measurment.h";
 #include "../TCPLib/TCPLib.cpp";
 
@@ -17,7 +17,7 @@
 
 #define DEFAULT_BUFLEN 1000
 #define DEFAULT_PORT "27016"
-#define MAX_CLIENTS 10
+#define MAX_CLIENTS 100
 #define MAX_THREADS 16
 #define TIMEVAL_SEC 0
 #define TIMEVAL_USEC 0
@@ -181,6 +181,7 @@ DWORD WINAPI InitWorkerThreads(LPVOID params) {
 
     if (WaitForMultipleObjects(MAX_THREADS, workerHandles, TRUE, INFINITE) != WAIT_OBJECT_0 + MAX_THREADS - 1) { //TODO make sure math is correct 
         //all worker threads succesfully finished, close them
+        printf("[DEBUG] Workers finished\n");
         for (int i = 0; i < MAX_THREADS; ++i) {
             SAFE_DELETE_HANDLE(workerHandles[i]);
             workerHandles[i] = 0;
