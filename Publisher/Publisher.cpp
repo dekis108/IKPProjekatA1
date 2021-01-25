@@ -12,6 +12,8 @@
 #include <time.h>
 
 #include "../Common/Measurment.h";
+#include "../Common/Measurment.cpp";
+#include "../TCPLib/TCPLib.h";
 #include "../TCPLib/TCPLib.cpp";
 
 #pragma comment(lib,"WS2_32")

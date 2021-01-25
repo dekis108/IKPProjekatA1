@@ -10,6 +10,7 @@
 //#include "../Common/GenericList.h";
 #include "../Common/ThreadSafeGenericList.h";
 #include "../Common/Measurment.h";
+#include "../Common/Measurment.cpp";
 #include "../TCPLib/TCPLib.cpp";
 
 #pragma comment(lib,"WS2_32")
