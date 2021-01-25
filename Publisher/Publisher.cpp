@@ -21,7 +21,7 @@
 #define ADDRESS "127.0.0.1"
 #define TYPE_STRING_LENGHT 10
 #define DEMOTESTCOUNT 20
-#define SLEEP_TIME 5
+#define SLEEP_TIME 3000
 
 int Init();
 bool InitializeWindowsSockets();
@@ -94,7 +94,9 @@ void SendMeasurment(int publishingType) {
             printf("Sent\n");
         }
         else {
-            printf("An error occured %s\n", WSAGetLastError());
+            printf("Server down, shutting down..\n");
+            free(m);
+            return;
         }
         free(m);
         Sleep(SLEEP_TIME);

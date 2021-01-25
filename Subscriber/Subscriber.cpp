@@ -28,7 +28,7 @@ bool InitializeWindowsSockets();
 bool CreateSocket();
 bool Connect();
 bool IntroduceMyself();
-void Subscribe();
+bool Subscribe();
 //DWORD WINAPI Receive();
 void StartRecieveThread();
 bool Validate(Measurment *);
@@ -44,7 +44,11 @@ sockaddr_in serverAddress;
 DWORD WINAPI Receive(LPVOID param) {
     char* data = (char*)malloc(sizeof(Measurment));
     while (true) {
-        TCPReceive(connectSocket, data, sizeof(Measurment));
+        if (!TCPReceive(connectSocket, data, sizeof(Measurment))) {
+            printf("Unable to receive, server down\n");
+            printf("Shutting down.\n");
+            return 1;
+        }
         Measurment* newMeasurment = (Measurment*)malloc(sizeof(Measurment));
         memcpy(newMeasurment, data, sizeof(Measurment));
         if (Validate(newMeasurment)) {
@@ -71,13 +75,19 @@ int main()
 
     printf("Client initialised.\n");
 
-    Subscribe();
+    if (!Subscribe()) {
+        printf("Unable to subscribe, server offline..\nShutting down.\n");
+        getchar();
+        getchar();
+        return 1;
+     }
 
     printf("Client subscribed.\n");
     
     StartRecieveThread();
 
     getchar();
+    return 0;
 
 }
 
@@ -113,23 +123,25 @@ void StartRecieveThread() {
 /// Gives user the menu for picking subscription topics. Based on users input, uses a sending function from TCPLib to 
 /// tell PubSubEngine what topic client has subscribed to.
 /// </summary>
-void Subscribe() {
+bool Subscribe() {
     printf("1) Status\n2) Analog\n3) Both\nSelect: ");
     char c = getchar();
     char t1[2] = "s";
     char t2[2] = "a";
+    bool step1 = false, step2 = false;
     switch (c)
     {
     case '1':
-        TCPSend(connectSocket, t1);
+        return TCPSend(connectSocket, t1);
         break;
     case '2':
-        TCPSend(connectSocket, t2);
+        return TCPSend(connectSocket, t2);
         break;
     case '3':
-        TCPSend(connectSocket, t1);
-        Sleep(100);
-        TCPSend(connectSocket, t2);
+        step1 = TCPSend(connectSocket, t1);
+        Sleep(250);
+        step2 = TCPSend(connectSocket, t2);
+        return step1 && step2;
         break;
     default:
         printf("\nBad input.\n");
