@@ -598,23 +598,26 @@ DWORD WINAPI DoWork(LPVOID params) {
         //postoji specijalni zahtev koji je uslov za gasenje
         //otkljucaj
         //obradi
-        WorkerData* wData = (WorkerData*)malloc(sizeof(WorkerData));
-        EnterCriticalSection(&CSWorkerTasks);
-        if (workerTasks != NULL) {
-            memcpy(wData, workerTasks->data, sizeof(WorkerData));
-            DeleteNode(&workerTasks, workerTasks->data, sizeof(WorkerData));
-            execute = true;
-        }
-        LeaveCriticalSection(&CSWorkerTasks);
-        if (execute) {
-            //printf("Obradjujem zahtev sa i = %d \ni char *data = %s\n", wData->i, wData->data);
-            Work(wData->i);
-            execute = false;
-        }
         if (workerTasks == NULL) {
             Sleep(10);
         }
-        free(wData);
+        else {
+            WorkerData* wData = (WorkerData*)malloc(sizeof(WorkerData));
+            EnterCriticalSection(&CSWorkerTasks);
+            if (workerTasks != NULL) {
+                memcpy(wData, workerTasks->data, sizeof(WorkerData));
+                DeleteNode(&workerTasks, workerTasks->data, sizeof(WorkerData));
+                execute = true;
+            }
+            LeaveCriticalSection(&CSWorkerTasks);
+            if (execute) {
+                //printf("Obradjujem zahtev sa i = %d \ni char *data = %s\n", wData->i, wData->data);
+                Work(wData->i);
+                execute = false;
+            }
+            free(wData);
+        }
+
     }
     return true;
 }

@@ -34,13 +34,13 @@ bool TCPSend(SOCKET connectSocket, Measurment measurment) {
         free(data); //zasto puca?
         //free(&measurment);
         if (WSAGetLastError() == WSAEWOULDBLOCK) {
-            printf("[DEBUG] TCPSendMeasurment  WSAEWOULDBLOCK\n");
+            //printf("[DEBUG] TCPSendMeasurment  WSAEWOULDBLOCK\n");
             //Sleep(WOULDBLOCKWAIT);
             continue;
         }
         else if (iResult == SOCKET_ERROR)
         {
-            printf("send failed with error: %d\n", WSAGetLastError());
+           // printf("send failed with error: %d\n", WSAGetLastError());
             //closesocket(connectSocket);
             //WSACleanup();
             return false;
@@ -58,13 +58,13 @@ bool TCPSend(SOCKET connectSocket, char *key) {
     while (true) {
         int iResult = send(connectSocket, (const char*)key, sizeof(char), 0);
         if (WSAGetLastError() == WSAEWOULDBLOCK) {
-            printf("[DEBUG] TCPSendChar WSAEWOULDBLOCK\n");
+            //printf("[DEBUG] TCPSendChar WSAEWOULDBLOCK\n");
             //Sleep(WOULDBLOCKWAIT);
             continue;
         }
         else if (iResult == SOCKET_ERROR)
         {
-            printf("send failed with error: %d\n", WSAGetLastError());
+            //printf("send failed with error: %d\n", WSAGetLastError());
             //closesocket(connectSocket);
             //WSACleanup();
             return false;
@@ -99,7 +99,7 @@ int TCPReceive(SOCKET connectSocket, char* recvbuf, size_t len) {
     else if (iResult == SOCKET_ERROR)
     {
         // there was an error during recv
-        printf("recv failed with error: %d\n", WSAGetLastError());
+        //printf("recv failed with error: %d\n", WSAGetLastError());
         return 0;
     }
     else {
