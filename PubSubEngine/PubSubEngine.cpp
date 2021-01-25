@@ -9,6 +9,7 @@
 //#include "../Common/LinkedList.h";
 //#include "../Common/GenericList.h";
 #include "../Common/ThreadSafeGenericList.h";
+#include "../Common/ThreadSafeGenericList.cpp";
 #include "../Common/Measurment.h";
 #include "../Common/Measurment.cpp";
 #include "../TCPLib/TCPLib.cpp";
