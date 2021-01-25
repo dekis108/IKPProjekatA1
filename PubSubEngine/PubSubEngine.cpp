@@ -145,10 +145,6 @@ DWORD WINAPI InitWorkerThreads(LPVOID params) {
     if (WaitForMultipleObjects(MAX_THREADS, workerHandles, TRUE, INFINITE) != WAIT_OBJECT_0 + MAX_THREADS - 1) { //TODO make sure math is correct 
         //all worker threads succesfully finished, close them
         printf("[DEBUG] Workers finished\n");
-        for (int i = 0; i < MAX_THREADS; ++i) {
-            SAFE_DELETE_HANDLE(workerHandles[i]);
-            workerHandles[i] = 0;
-        }
     }
 
     return true;
@@ -464,17 +460,42 @@ void Shutdown() {
 
 
     printf("[INFO] Closing all handles..\n");
-    TerminateThread(listenHandle, NULL);
-    TerminateThread(workerManagerHandle, NULL);
+    if (!TerminateThread(listenHandle, NULL)) {
+        printf("[DEBUG] Cannot terminate listenHandle\n");
+    }
+    //if (!TerminateThread(workerManagerHandle, NULL)) {
+    //    printf("[DEBUG] Cannot terminate workerManagerHandle\n");
+    //}
+
+    //create special tasks that worker recognize as termination signals
+    WorkerData* terminate = (WorkerData*)malloc(sizeof(WorkerData));
+    terminate->i = WORKER_TERMINATE;
+    for (int i = 0; i < MAX_THREADS; ++i) {
+        GenericListPushAtStart(&workerTasks, terminate, sizeof(WorkerData));
+    }
+    free(terminate);
+
+    if (workerManagerHandle) {
+        WaitForSingleObject(workerManagerHandle, INFINITE);
+    }
+
     SAFE_DELETE_HANDLE(listenHandle);
     SAFE_DELETE_HANDLE(workerManagerHandle);
     for (int i = 0; i < MAX_THREADS; ++i) {
-        TerminateThread(workerHandles[i], NULL);
+        //if (TerminateThread(workerHandles[i], NULL)) {
+        //    printf("[DEBUG] Cannot terminate workerHandles[%d]\n", i);
+        //}
         SAFE_DELETE_HANDLE(workerHandles[i]);
     }
     printf("[INFO] Done\n");
 
-
+    printf("[INFO] Deleting all critical sections.. \n");
+    DeleteCriticalSection(&CSStatusData);
+    DeleteCriticalSection(&CSAnalogData);
+    DeleteCriticalSection(&CSStatusSubs);
+    DeleteCriticalSection(&CSAnalogSubs);
+    DeleteCriticalSection(&CSWorkerTasks);
+    printf("[INFO] Done\n");
 
     printf("[INFO] Deleting all data.. \n");
     FreeGenericList(&publisherList);
@@ -486,15 +507,9 @@ void Shutdown() {
     FreeGenericList(&workerTasks);
     printf("[INFO] Done\n");
 
-    printf("[INFO] Deleting all critical sections.. \n");
-    DeleteCriticalSection(&CSStatusData);
-    DeleteCriticalSection(&CSAnalogData);
-    DeleteCriticalSection(&CSStatusSubs);
-    DeleteCriticalSection(&CSAnalogSubs);
-    DeleteCriticalSection(&CSWorkerTasks);
-    printf("[INFO] Done\n");
-
     printf("[INFO] Service freed all memory.\n");
+    getchar();
+    getchar();
     return;
 }
 
@@ -540,15 +555,11 @@ void SendToNewSubscriber(SOCKET sub, NODE *dataHead) {
 /*
 * Infinite loop performed by worker threads. Work is initiated through creation of worker tasks.
 * No argument needed.
+* Returns true if properly terminated.
 */
 DWORD WINAPI DoWork(LPVOID params) {
     bool execute = false;
     while (true) {
-        //zakljucaj
-        //uzmi element iz listi zahteva ako ga ima
-        //postoji specijalni zahtev koji je uslov za gasenje
-        //otkljucaj
-        //obradi
         if (workerTasks == NULL) {
             Sleep(10);
         }
@@ -563,6 +574,10 @@ DWORD WINAPI DoWork(LPVOID params) {
             LeaveCriticalSection(&CSWorkerTasks);
             if (execute) {
                 //printf("Obradjujem zahtev sa i = %d \ni char *data = %s\n", wData->i, wData->data);
+                if (wData->i == WORKER_TERMINATE) { //special code for terminating the worker thread
+                    free(wData);
+                    return true;
+                }
                 Work(wData->i);
                 execute = false;
             }
@@ -570,5 +585,5 @@ DWORD WINAPI DoWork(LPVOID params) {
         }
 
     }
-    return true;
+    return false; //should never return here
 }
