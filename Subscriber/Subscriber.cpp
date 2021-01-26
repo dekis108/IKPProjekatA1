@@ -31,7 +31,6 @@ bool CreateSocket();
 bool Connect();
 bool IntroduceMyself();
 void Subscribe();
-//DWORD WINAPI Receive();
 void StartRecieveThread();
 bool Validate(Measurment *);
 
@@ -83,6 +82,12 @@ int main()
 
 }
 
+/// <summary>
+/// Validates recieved measurment packet. If the topic is Analog, the value can be anything greater than zero. 
+/// If the topic is Status, the value can be 0 or 1 (digital).
+/// </summary>
+/// <param name="m">Measurment packet</param>
+/// <returns>True if valid</returns>
 bool Validate(Measurment *m) {
     if (m->topic == Analog && m->value >= 0) {
         return true;
