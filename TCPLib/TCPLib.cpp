@@ -22,7 +22,12 @@
 
 #pragma comment(lib,"WS2_32")
 
-
+/// <summary>
+/// Sends a measurment packet trough the socket using TCP protocol.
+/// </summary>
+/// <param name="connectSocket">Socket trought which the data will be sent.</param>
+/// <param name="measurment">Measurment packet that will be sent.</param>
+/// <returns>True if sending was successful.</returns>
 bool TCPSend(SOCKET connectSocket, Measurment measurment) {
     char* data = (char*)malloc(sizeof(Measurment));
     memcpy(data, (const void *)&measurment, sizeof(Measurment));
@@ -39,7 +44,12 @@ bool TCPSend(SOCKET connectSocket, Measurment measurment) {
     return true;
 }
 
-
+/// <summary>
+/// Used for sending keys of introduction or any kind of string data trough the socket using TCP protocol.
+/// </summary>
+/// <param name="connectSocket">Socket trought which the data will be sent.</param>
+/// <param name="key">String that will be sent.</param>
+/// <returns>True if sending was successful.</returns>
 bool TCPSend(SOCKET connectSocket, char *key) {
     int iResult = send(connectSocket, (const char*)key, sizeof(char), 0);
     if (iResult == SOCKET_ERROR)
@@ -53,7 +63,13 @@ bool TCPSend(SOCKET connectSocket, char *key) {
 }
 
 
-
+/// <summary>
+/// Function for receiving packets from a specified socket.
+/// </summary>
+/// <param name="connectSocket">Socket trough which the packets will be sent.</param>
+/// <param name="recvbuf">Buffer that will store recieved data.</param>
+/// <param name="len">Lenght of data to be recieved.</param>
+/// <returns>True if recieving is successful.</returns>
 bool TCPReceive(SOCKET connectSocket, char* recvbuf, size_t len) {
     //Measurment* recvbuf = (Measurment*)malloc(sizeof(Measurment));
     //char* recvbuf = (char*)malloc(sizeof(len));

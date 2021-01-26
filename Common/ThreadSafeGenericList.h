@@ -15,7 +15,9 @@ typedef struct Node
     struct Node* next;
 }NODE;
 
-
+/*
+*  Initialises the head of the list.
+*/
 void InitGenericList(NODE** head);
 
 /* Function to add a node at the beginning of Linked List.
@@ -34,6 +36,8 @@ void PrintGenericList(NODE* node, void (*fptr)(void*));
 */
 void FreeGenericList(NODE** head);
 
-
+/*
+* Deletes a node from the list.
+*/
 bool DeleteNode(NODE** head, void* toDelete, size_t size);
 
