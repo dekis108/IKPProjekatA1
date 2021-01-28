@@ -68,3 +68,17 @@ Servis namenjen servisiranju izdavačkih / pretplatničkih klijenata. Prihvata v
 
 ### Publisher
 Klijentska komponenta koja je namenjena objavljivanju Measurment paketa.
+
+Before publishing it introduces itself to the PubSubEngine as a Publisher client. It then randomly generates packet values. Some of those values are delibretly left unvalid so that the subscriber can use validation on them. It publishes on a interval of 1001ms. Everytime it has a packet to publish it uses TCPSend function from TCPLib.
+### Subscriber
+Client component that is intended for recieving Measurment packets which correspont to clients subscription topic. Client upon connection with PubSubEngine introduces itself as a Subscriber client. After introduction, it picks a topic or topics it will subscribe to. After subscription, it creates a thread for packet recieving. This thread listenes on the client socket for packets that are being sent. For every packet, Subscriber has to do a validation on it and write on the console its validation status.
+### TCPLib
+A static library that has separate functions for sending and recieving on the TCP protocol. TCPSend function has two versions, one is intended for sending Measurment packets and other one is intended for introducing clients type to the service. TCPRecieve is a function that uses standard recv function to recieve anytype of packet as TCPRecieve will write in the recieved bytes into the recvbuf - recieve buffer and it is callers job to cast it to the expected type.
+### Common
+Common library contains Measurment.h that contains Measurment structure definition and its helper functions and GenericList.h. Measurment structure is comprised of enum MeasurmentTopic that has values of Analog and Status, then MeasurmentType enum that has values of SWG,CRB,MER and finally an integer value. GenericList contains definition and helper functions for a Generic List that is comprised of nodes that can take any type of data to be stored in them as it has a void pointer in the node structure.
+## Functionality and usage
+First the PubSubEngine must be started. After that, clients can be started. It does not matter in which order the clients are started. After starting Publisher, the publishing data is sent to the PubSubEngine and via the engine it is being routed to the Subscribers that are subscribed to the packets topic.
+## Testing
+## Testing Results
+## Conclusion
+## Possible Improvements
