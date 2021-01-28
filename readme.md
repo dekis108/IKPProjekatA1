@@ -70,7 +70,7 @@ Servis namenjen servisiranju izdavačkih / pretplatničkih klijenata. Prihvata v
 Klijentska komponenta koja je namenjena objavljivanju Measurment paketa. Pre objavljivanja predstavlja se PubSubEngine-u kao Publisher klijent. Omogućen je ručni unos podataka kao i automatsko generisanje. U slučaju automatskog generisanja potrebno je navesti interval generisanja. Neke od automatski generisanih vrednosti namerno ostaju nevažeće, tako da pretplatnik može da koristi validaciju nad njima. Koristi funkciju TCPSend iz TCPLib. Nema trajno čuvanje podataka.
 
 ### Subscriber
-Klijentska komponenta koja je namenjena za primanje Measurment paketa koji odgovaraju temi pretplate klijenata. Klijent nakon povezivanja sa PubSubEngine predstavlja se kao pretplatnički klijent. Nakon uvoda bira temu ili teme na koje će se pretplatiti. Nakon pretplate stvara nit za primanje paketa. Ova nit osluškuje na klijentskoj utičnici pakete koji se šalju. Za svaki paket Subscriber mora izvršiti validaciju nad njemu i na konzoli napisati njegov status validacije. Nema trajno čuvanje podataka.
+Klijentska komponenta koja je namenjena za primanje Measurment paketa koji odgovaraju temi pretplate klijenata. Klijent nakon povezivanja sa PubSubEngine predstavlja se kao pretplatnički klijent. Nakon uvoda bira temu ili teme na koje će se pretplatiti. Za pretplaćenu temu odmah dobija u odgovor sve podatke koje servis već ima. Nakon pretplate stvara nit za primanje paketa. Ova nit osluškuje na klijentskoj utičnici pakete koji se šalju. Za svaki paket Subscriber mora izvršiti validaciju nad njemu i na konzoli napisati njegov status validacije. Nema trajno čuvanje podataka.
 
 ### TCPLib
 Statična biblioteka koja ima odvojene funkcije za slanje i primanje na TCP protokolu. TCPSend funkcija ima dve verzije, jedna je namenjena slanju Measurment paketa, a druga je namenjena uvođenju tipa klijenta u uslugu. TCPRecieve je funkcija koja koristi standardnu funkciju recv za primanje bilo kog tipa paketa, jer će TCPRecieve upisati u primljene bajtove u recvbuf - reciveve bafer, a zadatak pozivaoca je da ga prebaci na očekivani tip.
@@ -81,7 +81,32 @@ Common biblioteka sadrži Measurment.h koji sadrži definiciju strukture Measurm
 ## Funkcionalnost i upotreba
 Prvo se mora pokrenuti PubSubEngine. Nakon toga, klijenti mogu da se pokrenu. Nije važno kojim redosledom se započinju klijenti. Nakon pokretanja Publisher-a, podaci o objavljivanju se šalju PubSubEngine-u i putem mehanizma se preusmeravaju na pretplatnike koji su pretplaćeni na temu paketa.
 
-## Testiranje
-## Rezultati testiranja
+## Testiranje 
+
+Za potrebe testiranja je podešen sistem od 10 Publisher-a koji na intervalu od 5 ms šalju podatak na servis, kao i 6 Subscriber-a kojima je servis te podatke morao prosledjivati.
+
+![t1-perfomance-pocetak-rada.png](https://i.postimg.cc/ydHVmmYC/t1-perfomance-pocetak-rada.png)
+![t1-pocetak-rada.png](https://i.postimg.cc/MHZq4zQs/t1-pocetak-rada.png)
+Trenutak 1: Stanje na početku rada, servis pauziran na samom početku main funkcije. 
+
+![t2-nakon-inita.png](https://i.postimg.cc/RCGMtJk2/t2-nakon-inita.png)
+Trenutak 2: Stanje nakon ušpesne inicijalizacije servisa. Broj niti (Handle count) skače jer se u ovom momenti inicijalizuju sve radne niti.
+
+![t2-5-neki-trenutak-tokom-rada-perfomance.png](https://i.postimg.cc/fTLMfTZy/t2-5-neki-trenutak-tokom-rada-perfomance.png)
+Trenutak 3: Ubrzo nakon što su se zakačili klijenti Publisher-i. Servis počinje da zauzima dodatni prostor radi smeštanja novih podataka.
+
+![t3-pauza.png](https://i.postimg.cc/Dw4FRjSK/t3-pauza.png)
+![t3-tredovi.png](https://i.postimg.cc/QMLsDQ7K/t3-tredovi.png)
+Trenutak 4: Nakon 6 minuta. Uvid u stanja niti. 
+
+![t4-druga-pauza.png](https://i.postimg.cc/ZRHh6XM6/t4-druga-pauza.png)
+Trenutak 5: Nakon 26 minuta. Zauzeće memorije zauzima oko 277 mb.
+
+![t5-pocetak-gasenja.png](https://i.postimg.cc/xCn2J9t0/t5-pocetak-gasenja.png)
+Trenutak 6: Početak gašenja servisa, klijenti se diskonektuju. 
+
+![t6-ugasen.png](https://i.postimg.cc/Zqrm5WP7/t6-ugasen.png)
+Trenutak 7: Završenje Shutdown funkcije. Oslobodjenje radne memorije.
+
 ## Zaključak
 ## Moguća poboljšanja
