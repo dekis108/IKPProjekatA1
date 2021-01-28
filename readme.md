@@ -4,14 +4,14 @@
 Projektna specifikacija za aplikaciju Publisher / Subscriber navodi razvoj tri različita entiteta, a to su PubSubEngine, Publisher i Subscriber. PubSubEngine je potreban za pružanje usluga klijentima primenom interfejsa od tri funkcije. Prva funkcija - funkcija Connect je namenjena za preslušavanje klijentskih veza. Drugo - Subscribe funkcija je namenjena klijentima da se pretplate na određene teme od interesa. Treća funkcija je funkcija objavljivanja i namenjena je klijentima da pošalju svoje podatke za objavljivanje kako bi se mogli preneti klijentima koji su se pretplatili na dotičnu temu. Postoje dve vrste tema - Analogn i Status. Ako je tema Status, tada su dozvoljeni tipovi SVG (rasklopna oprema) i CRB (prekidač). U slučaju Analog teme, dozvoljeni tip je MER (merenje). Izdavači mogu da šalju vrednosti za analogne i digitalne tačke. Pretplatnik treba da potvrdi poruke koje dobije od PubSubEngine-a tako što će proveriti da li vrednost odgovara njegovoj temi - Analogna vrednost ili Digitalna vrednost. Digitalne vrednosti su 0 i 1. Analogne vrednosti su nepotpisane int vrednosti.
 Cilj ovog projekta je pokazati kako se arhitektura klijenta / servera može paralelno paralelizovati, koristeći TCP protokol za slanje paketa podataka.
 
-[! [1.jpg] (https://i.postimg.cc/bNjV04FKS/1.jpg)] (https://postimg.cc/RkKST4pBG)
+![1.jpg](https://i.postimg.cc/bNjV04FX/1.jpg)
 
 TCP je prokotol transportnog sloja koji je connection-oriented, odnosno pre slanja samih podataka potrebno je otvoriti i odrzavati vezu izmedju stranaka. TCP garantuje pouzdan transfer podataka primenom detekcije i retransmisije ispalih paketa. 
 
 ## Arhitektura i dizajn
 Sistem se sastoji od tri odvojena entiteta. Prva je servis - PubSubEngine. Servis je pruža usluge dvoma tipova klijenata: Publisher i Subscriber. Opšta arhitektura sistema je klijent - server arhitektura sa N brojem klijenata (izdavača i pretplatnika) i jednom uslugom. Za komunikaciju se koristi protokol TCP. Uvedena je zasebna statička biblioteka - TCPLib i njegove funkcionalnosti koriste se za TCP komunikaciju između komponenti. Model podataka koji se koristi za čuvanje podataka je struktura i generička lista. Generička lista se koristi za čuvanje  paketa i utičnica za klijentske veze u odvojenim listama.
 
-[! [2.png] (https://i.postimg.cc/3JNKSMBkS/2.png)] (https://postimg.cc/56cILvbL)
+![2.png](https://i.postimg.cc/3JNXMBqS/2.png)
 
 ## Logika niti
 Pokrenuta je nit za preslušavanje kako bi mogla da preuzme veze klijenta i sačuva ih na listama klijenata.
