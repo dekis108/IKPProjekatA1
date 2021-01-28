@@ -17,17 +17,17 @@ Sistem se sastoji od tri odvojena entiteta. Prva je servis - PubSubEngine. Servi
 ## Logika niti
 Pokrenuta je nit za preslušavanje kako bi mogla da preuzme veze klijenta i sačuva ih na listama klijenata.
 Spiskovi klijenata su:
-`` c
+```c
 NODE * publisherList = NULL;
 NODE * subscriberList = NULL;
-``
+```
 /// DEJO OPISATI
 
 ## Strukture podataka
 ### Struktura merenja
 Struktura ima tri polja: temu, tip i vrednost. Tip teme je nabrajanje sa vrednostima Analog i Status. Tip tipova je nabrajanje sa vrednostima SVG, MER i CRB. Vrednost je ceo broj.
 
-``c
+```c
 tipedef enum MeasurmentTopic {Analog = 0, Status} Tema;
 
 tipedef enum MeasurmentTipe {SVG = 0, CRB, MER} Tip;
@@ -38,21 +38,21 @@ tipedef struct _msgFormat {
     int value;
 
 } Merenje;
-``
+```
 
 Datoteka zaglavlja Measurment.h sadrži nekoliko pomoćnih funkcija:
-``c
+```c
 const char * GetStringFromEnumHelper (Tema teme);
 const char * GetStringFromEnumHelper (tip tipa);
 void PrintMeasurment (merenje * m);
-``
+```
 Prve dve funkcije su pomoćne funkcije pretvarača nabrajanja, a treća je jednostavna funkcija ispisa koja ispisuje vrednosti Measurment strukture.
 
 ### Thread Safe Generic Linked List
 Ovo je lista koja se može koristiti za čuvanje bilo koje vrste podataka, jer njeni čvorovi sadrže void pokazivač.
 Čvor liste ima strukturu:
 
-``c
+```c
 tipedef struct Node
 {
     // Bilo koji tip podataka može biti uskladišten u ovom čvoru
@@ -60,7 +60,7 @@ tipedef struct Node
     HANDLE mutex;
     struct Node * next;
 } NODE;
-``
+```
 Mutex koji ima svaki čvor osigurava sigurnost niti na nivou čvora liste. Sigurnost niti na nivou liste se primenjuje korišćenjem kritičnih sekcija u kojima se koriste liste (PubSubEngine). U svakoj pomoćnoj funkciji liste nit će čekati na oslobađanju mutex-a za manipulaciju čvorom.
 
 Implementacija liste gura novi element na početak u O(1) vremenu. 
