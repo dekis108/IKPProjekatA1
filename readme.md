@@ -1,84 +1,70 @@
-# Documentation
+# Dokumentacija
 
-## Introduction
-Project specification of Publisher/Subscriber application specifies development of three diferent entities which are PubSubEngine, Publisher and Subscriber. PubSubEngine is required to service clients by implementing interface of three functions. First function - Connect function is intended for listening for client connections. Second - Subscribe function is intended for clients to subscribe to certain topics of interest. Third function is Publish function and it is intended for clients to send in their publishing data so it can be transmitted to clients that have subscribed to the topic at hand. There are two types of topic - Analog and Status. If the topic is Status, then allowed types are SWG (switchgear) and CRB (circuit breaker). In case of Analog topic, allowed type is MER (measurment). Publishers can send values for both Analog and Digital points. Subscriber should validate messages that it get from the PubSubEngine by checking if wheater the value corresponds to its topic - Analog value or Digital value. Digital values are 0 and 1. Analog values are unsigned int values. 
-Goal of this project is to demonstrate how client/server arhitecture can be paralelised whilst using TCP protocol for sending packets of data. 
+## Uvod
+Projektna specifikacija za aplikaciju Publisher / Subscriber navodi razvoj tri različita entiteta, a to su PubSubEngine, Publisher i Subscriber. PubSubEngine je potreban za pružanje usluga klijentima primenom interfejsa od tri funkcije. Prva funkcija - funkcija Connect je namenjena za preslušavanje klijentskih veza. Drugo - Pretplata funkcija je namenjena klijentima da se pretplate na određene teme od interesa. Treća funkcija je funkcija objavljivanja i namenjena je klijentima da pošalju svoje podatke za objavljivanje kako bi se mogli preneti klijentima koji su se pretplatili na dotičnu temu. Postoje dve vrste tema - Analogna i Statusna. Ako je tema Status, tada su dozvoljeni tipovi SVG (rasklopna oprema) i CRB (prekidač). U slučaju Analogne teme, dozvoljeni tip je MER (merenje). Izdavači mogu da šalju vrednosti za analogne i digitalne tačke. Pretplatnik treba da potvrdi poruke koje dobije od PubSubEngine-a tako što će proveriti da li vrednost odgovara njegovoj temi - Analogna vrednost ili Digitalna vrednost. Digitalne vrednosti su 0 i 1. Analogne vrednosti su nepotpisane int vrednosti.
+Cilj ovog projekta je pokazati kako se arhitektura klijenta / servera može paralelno paralelizovati, koristeći TCP protokol za slanje paketa podataka.
 
-[![1.jpg](https://i.postimg.cc/bNjV04FX/1.jpg)](https://postimg.cc/RqXT4pBG)
+[! [1.jpg] (https://i.postimg.cc/bNjV04FKS/1.jpg)] (https://postimg.cc/RkKST4pBG)
 
-## Arhitecture and Design
-System is comprised of three separate entities. First is the service component - PubSubEngine. Service component is built for servicing two types of clients: Publisher and Subscriber. General arhitecture of the system is client - server arhitecture with N number of clients (both publishers and subscribers) and one service. Protocol used for communication is TCP protocol. Separate static library is introduced - TCPLib and its functionalities are used for TCP communication between components. Data model that is used for storing data is Measurment structure and a generic list. Generic list is used for storing Measurment packets and client connection sockets in separate lists.
+TCP je prokotol transportnog sloja
 
-[![2.png](https://i.postimg.cc/3JNXMBqS/2.png)](https://postimg.cc/56cYLwbL)
+## Arhitektura i dizajn
+Sistem se sastoji od tri odvojena entiteta. Prva je komponenta usluge - PubSubEngine. Komponenta usluge izgrađena je za servisiranje dva tipa klijenata: Publisher i Subscriber. Opšta arhitektura sistema je klijent - server arhitektura sa N brojem klijenata (izdavača i pretplatnika) i jednom uslugom. Za komunikaciju se koristi protokol TCP. Uvedena je zasebna statička biblioteka - TCPLib i njegove funkcionalnosti koriste se za TCP komunikaciju između komponenti. Model podataka koji se koristi za čuvanje podataka je Merna struktura i generička lista. Generička lista se koristi za čuvanje Measurment paketa i utičnica za klijentske veze u odvojenim listama.
 
-## Threading logic 
-Listen thread is started so it can pick up client connections and store them in client lists. 
-Client lists are: 
-```c
-NODE *publisherList = NULL;
-NODE *subscriberList = NULL;
-```
-///DEJO OPISATI 
+[! [2.png] (https://i.postimg.cc/3JNKSMBkS/2.png)] (https://postimg.cc/56cILvbL)
 
-## Data Structures
-### Measurment structure
-Structure has three fields: topic, type and value. Topics type is an enum with vlaues of Analog and Status. Types type is an enum with values of SWG,MER and CRB. Value is an integer. 
-```c
-typedef enum MeasurmentTopic {Analog = 0, Status} Topic;
+## Logika navoja
+Pokrenuta je nit za preslušavanje kako bi mogla da preuzme veze klijenta i sačuva ih na listama klijenata.
+Spiskovi klijenata su:
+`` c
+NODE * publisherList = NULL;
+NODE * subscriberList = NULL;
+``
+/// DEJO OPISATI
 
-typedef enum MeasurmentType {SWG = 0, CRB, MER} Type;
+## Strukture podataka
+### Struktura merenja
+Struktura ima tri polja: temu, tip i vrednost. Tip teme je nabrajanje sa vrednostima Analog i Status. Tip tipova je nabrajanje sa vrednostima SVG, MER i CRB. Vrednost je ceo broj.
+`` c
+tipedef enum MeasurmentTopic {Analog = 0, Status} Tema;
 
-typedef struct _msgFormat {
-    Topic topic;
-    Type type;
+tipedef enum MeasurmentTipe {SVG = 0, CRB, MER} Tip;
+
+tipedef struct _msgFormat {
+    Tema teme;
+    Tipe tipe;
     int value;
 
-}Measurment;
-```
-Measurment.h header file contains several helper functions:
-```c
-const char* GetStringFromEnumHelper(Topic topic);
-const char* GetStringFromEnumHelper(Type type);
-void PrintMeasurment(Measurment * m);
-```
-First two functions are enum converter helper functions and the third one is a simple print function that prints out values of the Measurment structure.
+} Merenje;
+``
+Datoteka zaglavlja Measurment.h sadrži nekoliko pomoćnih funkcija:
+`` c
+const char * GetStringFromEnumHelper (Tema teme);
+const char * GetStringFromEnumHelper (tip tipa);
+void PrintMeasurment (merenje * m);
+``
+Prve dve funkcije su pomoćne funkcije pretvarača nabrajanja, a treća je jednostavna funkcija ispisa koja ispisuje vrednosti Measurment strukture.
 
 ### Thread Safe Generic Linked List
-This is a list that can be used to store any type of data as its nodes contain a void pointer to the storing data.
-Node of the list has a structure of:
-```c
-typedef struct Node
+Ovo je lista koja se može koristiti za čuvanje bilo koje vrste podataka, jer njeni čvorovi sadrže prazninu pokazivača na skladištenje podataka.
+Čvor liste ima strukturu:
+`` c
+tipedef struct Node
 {
-    // Any data type can be stored in this node 
-    void* data;
-    HANDLE mutex;
-    struct Node* next;
-}NODE;
-```
-The mutex that every node has secures thread-safety at the node level of the list. Thread-safety at the list level is implemented by using critical sections where the lists are used (PubSubEngine). In every helper function of the list a thread will be waiting on the release of the mutex to manipulate node.
+    // Bilo koji tip podataka može biti uskladišten u ovom čvoru
+    void * podaci;
+    HANDLE mutek;
+    struct Node * nekt;
+} NODE;
+``
+Muteks koji ima svaki čvor osigurava sigurnost niti na nivou čvora liste. Sigurnost niti na nivou liste se primenjuje korišćenjem kritičnih odeljaka u kojima se koriste liste (PubSubEngine). U svakoj pomoćnoj funkciji liste nit će čekati na oslobađanju muteka za manipulaciju čvorom.
+
+Implementacija liste gura novi element na početku u O (1) vremenu.
+
+Podaci koje usluga prima čuvaju se u odvojenim listama na osnovu teme. Lista je korišćena kao struktura podataka, jer kada se podaci čitaju, tokom prenosa pretplatnicima, svi podaci će se ionako čitati uzastopno.
 
 ### PubSubEngine
-Service component intended for servicing publisher/subscriber clients. It accepts connections in thread made for listening. Connections that are of publishers are stored in a generic list initialised for publishers and those that are of subscriber are stored in subscriber generic list. After clients introducment, depending on which type he is, publisher/subscriber logic begins. For publishers there is a thread pool that accepts Measurment packets sent from various Publishers. The packet is then stored in generic lists depending on the topic it has - Analog or Status. For subscribers there is a thread pool that is used for sending Measurment packets to clients depending on what kind of topic they are subscribed to. 
+Komponenta usluge namenjena servisiranju izdavačkih / pretplatničkih klijenata. Prihvata veze u niti napravljene za slušanje. Veze izdavača čuvaju se na generičkoj listi koja je inicirana za izdavače, a one pretplatničke na generičkoj listi pretplatnika. Nakon predstavljanja klijenata, u zavisnosti od toga koji je tip, počinje logika izdavača / pretplatnika. Za izdavače postoji spremište niti koje prihvata Measurment pakete poslate od različitih izdavača. Paket se zatim čuva u generičkim listama, u zavisnosti od teme koju ima - Analog ili Status. Za pretplatnike postoji spremište niti koje se koristi za slanje Measurment paketa klijentima, u zavisnosti od toga na koju su temu pretplaćeni.
 
-### Publisher
-Client component that is intended for publishing Measurment packets to the PubSubEngine.Before publishing it introduces itself to the PubSubEngine as a Publisher client. It then randomly generates packet values. Some of those values are delibretly left unvalid so that the subscriber can use validation on them. It publishes on a interval of 1001ms. Everytime it has a packet to publish it uses TCPSend function from TCPLib.
-
-### Subscriber
-Client component that is intended for recieving Measurment packets which correspont to clients subscription topic. Client upon connection with PubSubEngine introduces itself as a Subscriber client. After introduction, it picks a topic or topics it will subscribe to. After subscription, it creates a thread for packet recieving. This thread listenes on the client socket for packets that are being sent. For every packet, Subscriber has to do a validation on it and write on the console its validation status.
-
-### TCPLib
-A static library that has separate functions for sending and recieving on the TCP protocol. TCPSend function has two versions, one is intended for sending Measurment packets and other one is intended for introducing clients type to the service. TCPRecieve is a function that uses standard recv function to recieve anytype of packet as TCPRecieve will write in the recieved bytes into the recvbuf - recieve buffer and it is callers job to cast it to the expected type.
-
-### Common
-Common library contains Measurment.h that contains Measurment structure definition and its helper functions and GenericList.h. Measurment structure is comprised of enum MeasurmentTopic that has values of Analog and Status, then MeasurmentType enum that has values of SWG,CRB,MER and finally an integer value. GenericList contains definition and helper functions for a Generic List that is comprised of nodes that can take any type of data to be stored in them as it has a void pointer in the node structure.
-
-## Functionality and usage
-First the PubSubEngine must be started. After that, clients can be started. It does not matter in which order the clients are started. After starting Publisher, the publishing data is sent to the PubSubEngine and via the engine it is being routed to the Subscribers that are subscribed to the packets topic.
-
-## Testing
-
-## Testing Results
-
-## Conclusion
-
-## Possible Improvements
+### Izdavač
+Klijentska komponenta koja je namenjena objavljivanju Measurment paketa u PubSubEngine.Before pub
