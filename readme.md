@@ -1,6 +1,7 @@
 # Dokumentacija
 
 ## Uvod
+
 Projektna specifikacija za aplikaciju Publisher / Subscriber navodi razvoj tri različita entiteta, a to su PubSubEngine, Publisher i Subscriber. PubSubEngine je potreban za pružanje usluga klijentima primenom interfejsa od tri funkcije. Prva funkcija - funkcija Connect je namenjena za preslušavanje klijentskih veza. Drugo - Subscribe funkcija je namenjena klijentima da se pretplate na određene teme od interesa. Treća funkcija je funkcija objavljivanja i namenjena je klijentima da pošalju svoje podatke za objavljivanje kako bi se mogli preneti klijentima koji su se pretplatili na dotičnu temu. Postoje dve vrste tema - Analogn i Status. Ako je tema Status, tada su dozvoljeni tipovi SVG (rasklopna oprema) i CRB (prekidač). U slučaju Analog teme, dozvoljeni tip je MER (merenje). Izdavači mogu da šalju vrednosti za analogne i digitalne tačke. Pretplatnik treba da potvrdi poruke koje dobije od PubSubEngine-a tako što će proveriti da li vrednost odgovara njegovoj temi - Analogna vrednost ili Digitalna vrednost. Digitalne vrednosti su 0 i 1. Analogne vrednosti su nepotpisane int vrednosti.
 Cilj ovog projekta je pokazati kako se arhitektura klijenta / servera može paralelno paralelizovati, koristeći TCP protokol za slanje paketa podataka.
 
@@ -110,6 +111,8 @@ Trenutak 7: Završenje Shutdown funkcije. Oslobodjenje radne memorije.
 
 ## Zaključak
 
-Mogućnost servisa da opsluzi klijente koji su postavljali zahteve veoma brzo (reda milisekundi) i gotovo konstantno zazeće procesorske moći (od oko 20%) ukazuju na relativno optimizovanu implementaciju servisa. Nakon nagomilane količine prikupljenih podataka na servisu nije se primetila promena u perfomansi. Thread pool omogućava raspodelu posla preko više niti i samimm tim preko više fizičkih procesora. Kao što se može primetiti na slici 'Trenutak 7' nakon poziva Shutdown funkcije sva memorija se uspesno oslobadja, nema tkz. curenja memorije.
+Mogućnost servisa da opsluzi klijente koji su postavljali zahteve veoma brzo (reda milisekundi) i gotovo konstantno zazeće procesorske moći (od oko 20%) ukazuju na relativno optimizovanu implementaciju servisa. Nakon nagomilane količine prikupljenih podataka na servisu nije se primetila promena u perfomansi. Thread pool omogućava raspodelu posla preko više niti i samimm tim preko više fizičkih procesora. Kao što se može primetiti na slici 'Trenutak 7' nakon poziva Shutdown funkcije sva memorija se uspesno oslobadja, nema tkzv. curenja memorije.
  
 ## Moguća poboljšanja
+
+Trenutno implementiran servis ne pruža nikakvu administrativnu kontrolu na predmete koji bi mogli biti od interesa: definisanje kako, gde i koliko da se čuvaju pristigli podaci (kao i korišćenje relacione baze podataka), uvid u stanje klijenata i mogućnost (ne)dozvoljavanja njihovih operacija, oporavak od ispada tokom rada i slično. U realnom sistemu ove funkcionalnosti bi morale postojati. Klijentske aplikacije su minimalističke, služe samo edukativnom korišćenju servisa. Pravi klijentski softver bi morao da se sastoji od tkzv. user-friendly interfejsa.
