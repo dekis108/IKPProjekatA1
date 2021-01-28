@@ -26,7 +26,8 @@ NODE * subscriberList = NULL;
 ## Strukture podataka
 ### Struktura merenja
 Struktura ima tri polja: temu, tip i vrednost. Tip teme je nabrajanje sa vrednostima Analog i Status. Tip tipova je nabrajanje sa vrednostima SVG, MER i CRB. Vrednost je ceo broj.
-`` c
+
+``c
 tipedef enum MeasurmentTopic {Analog = 0, Status} Tema;
 
 tipedef enum MeasurmentTipe {SVG = 0, CRB, MER} Tip;
@@ -38,8 +39,9 @@ tipedef struct _msgFormat {
 
 } Merenje;
 ``
+
 Datoteka zaglavlja Measurment.h sadrži nekoliko pomoćnih funkcija:
-`` c
+``c
 const char * GetStringFromEnumHelper (Tema teme);
 const char * GetStringFromEnumHelper (tip tipa);
 void PrintMeasurment (merenje * m);
@@ -49,7 +51,8 @@ Prve dve funkcije su pomoćne funkcije pretvarača nabrajanja, a treća je jedno
 ### Thread Safe Generic Linked List
 Ovo je lista koja se može koristiti za čuvanje bilo koje vrste podataka, jer njeni čvorovi sadrže void pokazivač.
 Čvor liste ima strukturu:
-`` c
+
+``c
 tipedef struct Node
 {
     // Bilo koji tip podataka može biti uskladišten u ovom čvoru
@@ -115,4 +118,4 @@ Mogućnost servisa da opsluzi klijente koji su postavljali zahteve veoma brzo (r
  
 ## Moguća poboljšanja
 
-Trenutno implementiran servis ne pruža nikakvu administrativnu kontrolu na predmete koji bi mogli biti od interesa: definisanje kako, gde i koliko da se čuvaju pristigli podaci (kao i korišćenje relacione baze podataka), uvid u stanje klijenata i mogućnost (ne)dozvoljavanja njihovih operacija, oporavak od ispada tokom rada i slično. U realnom sistemu ove funkcionalnosti bi morale postojati. Klijentske aplikacije su minimalističke, služe samo edukativnom korišćenju servisa. Pravi klijentski softver bi morao da se sastoji od tkzv. user-friendly interfejsa.
+Trenutno implementiran servis ne pruža nikakvu administrativnu kontrolu na sledeće predmete koji bi mogli biti od interesa: definisanje kako, gde i koliko da se čuvaju pristigli podaci (kao i korišćenje relacione baze podataka), uvid u stanje klijenata i mogućnost (ne)dozvoljavanja njihovih operacija, oporavak od ispada tokom rada i slično. U realnom sistemu ove funkcionalnosti bi morale postojati. Klijentske aplikacije su minimalističke, služe samo edukativnom korišćenju servisa. Pravi klijentski softver bi morao da se sastoji od tkzv. user-friendly interfejsa.
