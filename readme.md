@@ -109,4 +109,7 @@ Trenutak 6: Početak gašenja servisa, klijenti se diskonektuju.
 Trenutak 7: Završenje Shutdown funkcije. Oslobodjenje radne memorije.
 
 ## Zaključak
+
+Mogućnost servisa da opsluzi klijente koji su postavljali zahteve veoma brzo (reda milisekundi) i gotovo konstantno zazeće procesorske moći (od oko 20%) ukazuju na relativno optimizovanu implementaciju servisa. Nakon nagomilane količine prikupljenih podataka na servisu nije se primetila promena u perfomansi. Thread pool omogućava raspodelu posla preko više niti i samimm tim preko više fizičkih procesora. Kao što se može primetiti na slici 'Trenutak 7' nakon poziva Shutdown funkcije sva memorija se uspesno oslobadja, nema tkz. curenja memorije.
+ 
 ## Moguća poboljšanja
