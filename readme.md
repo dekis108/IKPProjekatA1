@@ -67,18 +67,21 @@ Podaci koje usluga prima čuvaju se u odvojenim listama na osnovu teme. Lista je
 Servis namenjen servisiranju izdavačkih / pretplatničkih klijenata. Prihvata veze u niti napravljenoj za slušanje. Veze izdavača čuvaju se na generičkoj listi koja je inicirana za izdavače, a one pretplatničke na generičkoj listi pretplatnika. Nakon predstavljanja klijenata, u zavisnosti od toga koji je tip, počinje logika izdavača / pretplatnika. Za izdavače postoji spremište niti koje prihvata Measurment pakete poslate od različitih izdavača. Paket se zatim čuva u generičkim listama, u zavisnosti od teme koju ima - Analog ili Status. *opisi thread pool*
 
 ### Publisher
-Klijentska komponenta koja je namenjena objavljivanju Measurment paketa.
+Klijentska komponenta koja je namenjena objavljivanju Measurment paketa. Pre objavljivanja predstavlja se PubSubEngine-u kao Publisher klijent. Omogućen je ručni unos podataka kao i automatsko generisanje. U slučaju automatskog generisanja potrebno je navesti interval generisanja. Neke od automatski generisanih vrednosti namerno ostaju nevažeće, tako da pretplatnik može da koristi validaciju nad njima. Koristi funkciju TCPSend iz TCPLib. Nema trajno čuvanje podataka.
 
-Before publishing it introduces itself to the PubSubEngine as a Publisher client. It then randomly generates packet values. Some of those values are delibretly left unvalid so that the subscriber can use validation on them. It publishes on a interval of 1001ms. Everytime it has a packet to publish it uses TCPSend function from TCPLib.
 ### Subscriber
-Client component that is intended for recieving Measurment packets which correspont to clients subscription topic. Client upon connection with PubSubEngine introduces itself as a Subscriber client. After introduction, it picks a topic or topics it will subscribe to. After subscription, it creates a thread for packet recieving. This thread listenes on the client socket for packets that are being sent. For every packet, Subscriber has to do a validation on it and write on the console its validation status.
+Klijentska komponenta koja je namenjena za primanje Measurment paketa koji odgovaraju temi pretplate klijenata. Klijent nakon povezivanja sa PubSubEngine predstavlja se kao pretplatnički klijent. Nakon uvoda bira temu ili teme na koje će se pretplatiti. Nakon pretplate stvara nit za primanje paketa. Ova nit osluškuje na klijentskoj utičnici pakete koji se šalju. Za svaki paket Subscriber mora izvršiti validaciju nad njemu i na konzoli napisati njegov status validacije. Nema trajno čuvanje podataka.
+
 ### TCPLib
-A static library that has separate functions for sending and recieving on the TCP protocol. TCPSend function has two versions, one is intended for sending Measurment packets and other one is intended for introducing clients type to the service. TCPRecieve is a function that uses standard recv function to recieve anytype of packet as TCPRecieve will write in the recieved bytes into the recvbuf - recieve buffer and it is callers job to cast it to the expected type.
+Statična biblioteka koja ima odvojene funkcije za slanje i primanje na TCP protokolu. TCPSend funkcija ima dve verzije, jedna je namenjena slanju Measurment paketa, a druga je namenjena uvođenju tipa klijenta u uslugu. TCPRecieve je funkcija koja koristi standardnu funkciju recv za primanje bilo kog tipa paketa, jer će TCPRecieve upisati u primljene bajtove u recvbuf - reciveve bafer, a zadatak pozivaoca je da ga prebaci na očekivani tip.
+
 ### Common
-Common library contains Measurment.h that contains Measurment structure definition and its helper functions and GenericList.h. Measurment structure is comprised of enum MeasurmentTopic that has values of Analog and Status, then MeasurmentType enum that has values of SWG,CRB,MER and finally an integer value. GenericList contains definition and helper functions for a Generic List that is comprised of nodes that can take any type of data to be stored in them as it has a void pointer in the node structure.
-## Functionality and usage
-First the PubSubEngine must be started. After that, clients can be started. It does not matter in which order the clients are started. After starting Publisher, the publishing data is sent to the PubSubEngine and via the engine it is being routed to the Subscribers that are subscribed to the packets topic.
-## Testing
-## Testing Results
-## Conclusion
-## Possible Improvements
+Common biblioteka sadrži Measurment.h koji sadrži definiciju strukture Measurment i njegove pomoćne funkcije i GenericList.h. Mernu strukturu čini enum MeasurmentTopic koji ima vrednosti Analog i Status, zatim MeasurmentTipe enum koji ima vrednosti SVG, CRB, MER i na kraju celobrojnu vrednost. GenericList sadrži definicije i pomoćne funkcije za Generičku listu koja se sastoji oda ko čvorovji mogu uzeti bilo koji tip podataka da se u njih uskladišti, jer ima void pokazivač u strukturi čvora.
+
+## Funkcionalnost i upotreba
+Prvo se mora pokrenuti PubSubEngine. Nakon toga, klijenti mogu da se pokrenu. Nije važno kojim redosledom se započinju klijenti. Nakon pokretanja Publisher-a, podaci o objavljivanju se šalju PubSubEngine-u i putem mehanizma se preusmeravaju na pretplatnike koji su pretplaćeni na temu paketa.
+
+## Testiranje
+## Rezultati testiranja
+## Zaključak
+## Moguća poboljšanja
