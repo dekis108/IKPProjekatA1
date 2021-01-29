@@ -86,13 +86,30 @@ Implementacija liste gura novi element na početak u O(1) vremenu.
 Podaci koje usluga prima čuvaju se u odvojenim listama na osnovu teme. Lista je korišćena kao struktura podataka jer, kada se podaci čitaju tokom prenosa pretplatnicima, svi podaci će se svakako čitati uzastopno.
 
 ### PubSubEngine
-Servis namenjen servisiranju izdavačkih / pretplatničkih klijenata. Prihvata veze u niti napravljenoj za slušanje. Veze izdavača čuvaju se na generičkoj listi koja je inicirana za izdavače, a one pretplatničke na generičkoj listi pretplatnika. Nakon predstavljanja klijenata, u zavisnosti od toga koji je tip, počinje logika izdavača / pretplatnika. Za izdavače postoji spremište niti koje prihvata Measurment pakete poslate od različitih izdavača. Paket se zatim čuva u generičkim listama, u zavisnosti od teme koju ima - Analog ili Status. *opisi thread pool*
+Servis namenjen servisiranju izdavačkih / pretplatničkih klijenata. Prihvata veze u niti napravljenoj za slušanje. Veze izdavača čuvaju se na generičkoj listi koja je inicirana za izdavače, a one pretplatničke na generičkoj listi pretplatnika. Nakon predstavljanja klijenata, u zavisnosti od toga koji je tip, počinje logika izdavača / pretplatnika. Za izdavače postoji spremište niti koje prihvata Measurment pakete poslate od različitih izdavača. Paket se zatim čuva u generičkim listama, u zavisnosti od teme koju ima - Analog ili Status.
+
+PubSubEngine nakon pokretanja i konektovanja dva različita klijenta:
+
+[![1ps.jpg](https://i.postimg.cc/W3QwCMD8/1ps.jpg)](https://postimg.cc/wyQNsRQR)
+
+PubSubEngine nakon gasenja:
+
+[![2ps.jpg](https://i.postimg.cc/x1xHBKhm/2ps.jpg)](https://postimg.cc/mP9tHFbZ)
+
 
 ### Publisher
 Klijentska komponenta koja je namenjena objavljivanju Measurment paketa. Pre objavljivanja predstavlja se PubSubEngine-u kao Publisher klijent. Omogućen je ručni unos podataka kao i automatsko generisanje. U slučaju automatskog generisanja potrebno je navesti interval generisanja. Neke od automatski generisanih vrednosti namerno ostaju nevažeće, tako da pretplatnik može da koristi validaciju nad njima. Koristi funkciju TCPSend iz TCPLib. Nema trajno čuvanje podataka.
 
+Primer pokrenutog Publisher-a sa nasumično generisanim paketima:
+
+[![pub.jpg](https://i.postimg.cc/50cHMp3X/pub.jpg)](https://postimg.cc/WDnpGGxV)
+
 ### Subscriber
 Klijentska komponenta koja je namenjena za primanje Measurment paketa koji odgovaraju temi pretplate klijenata. Klijent nakon povezivanja sa PubSubEngine predstavlja se kao pretplatnički klijent. Nakon uvoda bira temu ili teme na koje će se pretplatiti. Za pretplaćenu temu odmah dobija u odgovor sve podatke koje servis već ima. Nakon pretplate stvara nit za primanje paketa. Ova nit osluškuje na klijentskoj utičnici pakete koji se šalju. Za svaki paket Subscriber mora izvršiti validaciju nad njemu i na konzoli napisati njegov status validacije. Nema trajno čuvanje podataka.
+
+Primer pokrenutog Subscriber-a sa primanjem paketa od obe vrste topica:
+
+[![sub.jpg](https://i.postimg.cc/wj73yn4t/sub.jpg)](https://postimg.cc/4YRXj2gZ)
 
 ### TCPLib
 Statična biblioteka koja ima odvojene funkcije za slanje i primanje na TCP protokolu. TCPSend funkcija ima dve verzije, jedna je namenjena slanju Measurment paketa, a druga je namenjena uvođenju tipa klijenta u uslugu. TCPRecieve je funkcija koja koristi standardnu funkciju recv za primanje bilo kog tipa paketa, jer će TCPRecieve upisati u primljene bajtove u recvbuf - reciveve bafer, a zadatak pozivaoca je da ga prebaci na očekivani tip.
