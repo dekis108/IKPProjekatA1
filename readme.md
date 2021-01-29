@@ -7,7 +7,25 @@ Cilj ovog projekta je pokazati kako se arhitektura klijenta / servera može para
 
 ![1.jpg](https://i.postimg.cc/bNjV04FX/1.jpg)
 
-TCP je prokotol transportnog sloja koji je connection-oriented, odnosno pre slanja samih podataka potrebno je otvoriti i odrzavati vezu izmedju stranaka. TCP garantuje pouzdan transfer podataka primenom detekcije i retransmisije ispalih paketa. 
+# TCP
+TCP je prokotol transportnog sloja koji je connection-oriented, odnosno pre slanja samih podataka potrebno je otvoriti i odrzavati vezu izmedju stranaka. TCP garantuje pouzdan transfer podataka primenom detekcije i retransmisije ispalih paketa. Između ostalih servisa koje nudi, neki su: pouzdanost, efikasna kontrola toka podataka, operisanje u ful-dupleksu (istovremeno slanje i primanje podataka) i multipleksiranje koje omogućava istovremen rad niza procesa sa viših slojeva putem jedne konekcije. TCP vrši transfer podataka kao nestrukturisan niz bajtova koji se identifikuju sekvencom. Ovaj protokol grupiše bajtove u segmente dodeli im broj sekvence, aplikacijama dodeli broj porta i prosledi ih IP protokolu. TCP obezbeđuje pouzdanost pokretanjem algoritama koji pre razmene podataka prvo uspostave konekciju između korisnika, a potom obezbeđuje i niz mehanizama kao što je slanje ACK broja. Strana koja prima podatke šalje broj sekvence bajta koje je primio, u slučaju da destinacija ne pošalje ACK da je primio određenu sekvencu bajtova u određenom vremenskom intervalu ona biva naknadno ponovo poslata. Mehanizmi pouzdanosti kod TCP-a omogućuju uređajima da se nose sa gubicima, kašnjenjima, dupliciranjem ili pogrešnim iščitavanjem paketa. Time-out mehanizam omogućuje uređaju da detektuje izgubljene pakete i da zahteva njihovu ponovnu transmisiju. Ovako izgleda TCP zaglavlje:
+
+[![tcp.jpg](https://i.postimg.cc/xd5r9Zf8/tcp.jpg)](https://postimg.cc/94DgpJqH)
+
+Polja:
+
+    Izvorišni port - dodeljen broj (16 bita), identifikuje aplikaciju koja je inicijator komunikacije
+    Odredišni port - port koji identifikuje serversku aplikaciju (16 bita)
+    Broj segmenta (SEQ) - redni broj segmenta u odnosu na početni (broj bajta u odnosu na inicijalni)(32 bita)
+    Broj sledećeg bajta (ACK) - redni broj bajta poslat predajnoj strani koji očekuje da primi (32 bita)
+    Dužina - Dužina zaglavlja
+    Rezervisana polja
+    URG, ACK, PSH, RST, SYN, FIN predstavljaju kontrolne bite
+    Veličina dinamičkog prozora - broj okteta koje je moguće slati bez potvrde o njihovom prijemu
+    Čeksuma - Provera bitskih grešaka, komplement sume TCP zaglavlja
+    Pokazivač prioriteta (URG) - pokazuje važnost poruke koja se šalje
+    Opcije - Opciona informacija
+    Podatak - ako postoji opciona informacija bitovi počevši sa 192 predstavljaju podatak, inače od 160. bita
 
 ## Arhitektura i dizajn
 Sistem se sastoji od tri odvojena entiteta. Prva je servis - PubSubEngine. Servis je pruža usluge dvoma tipova klijenata: Publisher i Subscriber. Opšta arhitektura sistema je klijent - server arhitektura sa N brojem klijenata (izdavača i pretplatnika) i jednom uslugom. Za komunikaciju se koristi protokol TCP. Uvedena je zasebna statička biblioteka - TCPLib i njegove funkcionalnosti koriste se za TCP komunikaciju između komponenti. Model podataka koji se koristi za čuvanje podataka je struktura i generička lista. Generička lista se koristi za čuvanje  paketa i utičnica za klijentske veze u odvojenim listama.
