@@ -41,23 +41,23 @@ U okviru servisa se prilikom inicijalizacije započne rad konfigurisanog broja r
 Struktura ima tri polja: temu, tip i vrednost. Tip teme je nabrajanje sa vrednostima Analog i Status. Tip tipova je nabrajanje sa vrednostima SVG, MER i CRB. Vrednost je ceo broj.
 
 ```c
-tipedef enum MeasurmentTopic {Analog = 0, Status} Tema;
+typedef enum MeasurmentTopic {Analog = 0, Status} Topic;
 
-tipedef enum MeasurmentTipe {SVG = 0, CRB, MER} Tip;
+typedef enum MeasurmentType {SVG = 0, CRB, MER} Type;
 
-tipedef struct _msgFormat {
-    Tema teme;
-    Tipe tipe;
+typedef struct _msgFormat {
+    Topic topic;
+    Type type;
     int value;
 
-} Merenje;
+} Measurment;
 ```
 
 Datoteka zaglavlja Measurment.h sadrži nekoliko pomoćnih funkcija:
 ```c
-const char * GetStringFromEnumHelper (Tema teme);
-const char * GetStringFromEnumHelper (tip tipa);
-void PrintMeasurment (merenje * m);
+const char * GetStringFromEnumHelper (Topic topic);
+const char * GetStringFromEnumHelper (Type type);
+void PrintMeasurment (Measurment * m);
 ```
 Prve dve funkcije su pomoćne funkcije pretvarača nabrajanja, a treća je jednostavna funkcija ispisa koja ispisuje vrednosti Measurment strukture.
 
