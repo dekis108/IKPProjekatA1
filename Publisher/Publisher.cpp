@@ -27,10 +27,10 @@ int Init();
 bool InitializeWindowsSockets();
 bool CreateSocket();
 bool Connect();
-Measurment *GenerateMeasurment();
-Measurment *CreateMeasurment();
+Measurment* GenerateMeasurment();
+Measurment* CreateMeasurment();
 bool IntroduceMyself();
-void SendMeasurment(int publishingType);
+void SendMeasurment(int publishingType, int interval);
 
 SOCKET connectSocket = INVALID_SOCKET;
 sockaddr_in serverAddress;
@@ -48,6 +48,7 @@ int main()
     }
     printf("Client initialised.");
     int picked = 0;
+    int interval = 1000; //default interval
     while (true)
     {
         printf(" Pick a way of publishing:\n1)Randomly generated message\n2)User created message\n");
@@ -55,15 +56,20 @@ int main()
         if (picked != 1 && picked != 2) {
             printf("Please pick a valid publishing type.");
         }
+        else if (picked == 1) {
+            printf("Please pick an interval of publishing in ms: \n");
+            scanf("%d", &interval);
+            break;
+        }
         else {
             break;
         }
     }
 
     getchar();
-    
-    SendMeasurment(picked);
-    
+
+    SendMeasurment(picked, interval);
+
     getchar();
 
 }
@@ -71,27 +77,25 @@ int main()
 /// <summary>
 /// Function that sends randomly generated Measurment every 1001 ms by using a sending function from TCPLib.
 /// </summary>
-void SendMeasurment(int publishingType) {
+void SendMeasurment(int publishingType, int interval) {
     while (true) {
-      
-        Measurment* m = (Measurment *)malloc(sizeof(Measurment));
+        printf("Sending...\n");
+        Measurment* m = (Measurment*)malloc(sizeof(Measurment));
         switch (publishingType)
         {
         case 1:
-             m = GenerateMeasurment();
-             break;
+            m = GenerateMeasurment();
+            break;
         case 2:
-             m = CreateMeasurment();
-             break;
+            m = CreateMeasurment();
+            break;
         default:
             break;
         }
         //Measurment* m = GenerateMeasurment();
         //Measurment* m = CreateMeasurment();
-        printf("Sending: ");
-        PrintMeasurment(m);
         if (TCPSend(connectSocket, *m)) {
-            printf("Sent\n");
+            printf("Sent: %s %s %d \n", GetStringFromEnumHelper(m->topic), GetStringFromEnumHelper(m->type), m->value);
         }
         else {
             printf("Server down, shutting down..\n");
@@ -99,7 +103,7 @@ void SendMeasurment(int publishingType) {
             return;
         }
         free(m);
-        Sleep(SLEEP_TIME);
+        Sleep(interval);
     }
 }
 
@@ -107,24 +111,23 @@ void SendMeasurment(int publishingType) {
 /// Generates a randomly valued Measurment structure.
 /// </summary>
 /// <returns>Returns a pointer to the generated Measurment.</returns>
-Measurment * GenerateMeasurment() {
+Measurment* GenerateMeasurment() {
     Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
     enum MeasurmentTopic a = Analog;
-    //msg->value = (rand() % 100) + 1;
-    msg->value = ++globalValue;
+    msg->value = (rand() % 100) + 1;
     int topic = (rand() % 2);
     int type = (rand() % 2);
     switch (topic) {
-        case 0: 
-            msg->topic = Analog;
-            //msg->value = (rand() % 100);
-            break;
-    
-        case 1: 
-            msg->topic = Status;
-            msg->type = MER;
-            //msg->value = (rand() % 5);
-            break;
+    case 0:
+        msg->topic = Analog;
+        msg->value = (rand() % 100);
+        break;
+
+    case 1:
+        msg->topic = Status;
+        msg->type = MER;
+        msg->value = (rand() % 5);
+        break;
     }
     if (msg->topic == Analog) {
         switch (type)
@@ -144,9 +147,9 @@ Measurment * GenerateMeasurment() {
 /// Creates a Measurment structure by users input.
 /// </summary>
 /// <returns>Returns a Measurment.</returns>
-Measurment *CreateMeasurment() {
+Measurment* CreateMeasurment() {
     Measurment* msg = (Measurment*)malloc(sizeof(Measurment));
-    
+
     printf("Enter topic\n");
     char topic[20];
     scanf("%s", topic);
@@ -178,6 +181,7 @@ Measurment *CreateMeasurment() {
 
     return msg;
 }
+
 
 /// <summary>
 /// Initialises the client with functions InitializeWindowsSockets(), CreateSocket() and Connect(). 
