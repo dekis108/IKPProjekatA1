@@ -26,12 +26,12 @@
 #pragma comment (lib, "AdvApi32.lib")
 #pragma comment(lib,"WS2_32")
 
-#define DEFAULT_BUFLEN 1000
+
 #define DEFAULT_PORT "27016"
 #define MAX_CLIENTS 100
 #define MAX_THREADS 16
 #define TIMEVAL_SEC 0
-#define TIMEVAL_USEC 0
+#define TIMEVAL_USEC 100
 
 #define SAFE_DELETE_HANDLE(a)  if(a){CloseHandle(a);}
 
@@ -75,6 +75,7 @@ NODE *workerTasks = NULL;
 
 
 HANDLE listenHandle;
+bool terminateListen = false;
 HANDLE workerManagerHandle;
 HANDLE workerHandles[MAX_THREADS];
 
@@ -205,7 +206,10 @@ DWORD WINAPI Listen(LPVOID param) {
         int value = select(0, &readfds, NULL, NULL, &timeVal);
 
         if (value == 0) {
-            //pass...
+            if (terminateListen) {
+                printf("[INFO] Stopped listening.\n");
+                return true;
+            }
         }
         else if (value == SOCKET_ERROR) {
             //printf("[DEBUG] select failed with error: %d\ncontinueing...\n", WSAGetLastError());
@@ -462,19 +466,21 @@ void Shutdown() {
 
 
     printf("[INFO] Closing all handles..\n");
-    if (!TerminateThread(listenHandle, NULL)) {
-        printf("[DEBUG] Cannot terminate listenHandle\n");
+    terminateListen = true;
+    if (listenHandle) {
+        WaitForSingleObject(listenHandle, INFINITE);
     }
-    //if (!TerminateThread(workerManagerHandle, NULL)) {
-    //    printf("[DEBUG] Cannot terminate workerManagerHandle\n");
-    //}
 
     //create special tasks that worker recognize as termination signals
     WorkerData* terminate = (WorkerData*)malloc(sizeof(WorkerData));
     terminate->i = WORKER_TERMINATE;
-    for (int i = 0; i < MAX_THREADS * 3; ++i) {
+
+    EnterCriticalSection(&CSWorkerTasks);
+    for (int i = 0; i < MAX_THREADS; ++i) {
         GenericListPushAtStart(&workerTasks, terminate, sizeof(WorkerData));
     }
+    LeaveCriticalSection(&CSWorkerTasks);
+
     free(terminate);
 
     if (workerManagerHandle) {
