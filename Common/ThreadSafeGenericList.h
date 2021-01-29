@@ -1,7 +1,10 @@
 #pragma once
 // C program for generic linked list 
-#include<stdio.h> 
-#include<stdlib.h> 
+#include <ws2tcpip.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "pch.h"
+#include "framework.h"
 #include<windows.h>
 
 #define SAFE_DELETE_HANDLE(a)  if(a){CloseHandle(a);}

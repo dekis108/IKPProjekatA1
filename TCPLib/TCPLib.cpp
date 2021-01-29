@@ -1,27 +1,10 @@
 // TCPLib.cpp : Defines the functions for TCP communication.
 //
-
-#pragma once
-
-#define _CRT_NONSTDC_NO_DEPRECATE
-#define _CRT_SECURE_NO_WARNINGS
-
-
-
-
-#include <ws2tcpip.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-
 #include "pch.h"
 #include "framework.h"
 
-#include "../Common/LinkedList.h";
-#include "../Common/Measurment.h";
-
-
-#pragma comment(lib,"WS2_32")
+#include "TCPLib.h"
+#include "../Common/Measurment.h"
 
 /*
 * Uses wsa send(...) to transmit data of type Measurment to the target Socket.

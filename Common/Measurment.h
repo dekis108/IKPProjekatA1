@@ -1,11 +1,15 @@
 // Measurment.cpp : Defines the Measurment structure thats used for service-client communication.
 //
-
-#include "pch.h"
-#include "framework.h"
-
+#ifndef MEASURMENT
+#define MEASURMENT
 
 #pragma once
+
+#include <ws2tcpip.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "pch.h"
+
 
 
 typedef enum MeasurmentTopic {Analog = 0, Status}Topic;
@@ -22,27 +26,19 @@ typedef struct _msgFormat {
 /*
 * Get string representation from enum object, can't do it better in c.
 */
-const char* GetStringFromEnumHelper(Topic topic) {
-	const char* strings[] = { "Analog", "Status" };
-	return strings[topic];
-}
+const char* GetStringFromEnumHelper(Topic topic);
 
 
 /*
 * Get string representation from enum object, can't do it better in c.
 */
-const char* GetStringFromEnumHelper(Type type) {
-	const char* strings[] = { "SWG", "CRB", "MER" };
-	return strings[type];
-}
+const char* GetStringFromEnumHelper(Type type);
 
 
 /*
 * Print measurment struct.
 * *m = pointer to the Measurment to be printed
 */
-void PrintMeasurment(Measurment * m) {
-    printf("Measurment: ");
-    printf(" %s %s %d\n", GetStringFromEnumHelper(m->topic), GetStringFromEnumHelper(m->type), m->value);
-}
+void PrintMeasurment(Measurment* m);
 
+#endif // !MEASURMENT

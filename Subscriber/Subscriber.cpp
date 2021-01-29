@@ -11,7 +11,7 @@
 #include <conio.h>
 
 #include "../Common/Measurment.h";
-#include "../TCPLib/TCPLib.cpp";
+#include "../TCPLib/TCPLib.h";
 
 #pragma comment(lib,"WS2_32")
 
