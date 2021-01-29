@@ -27,15 +27,15 @@
 #pragma comment(lib,"WS2_32")
 
 #define DEFAULT_PORT "27016"
-#define MAX_CLIENTS 10
-#define MAX_THREADS 2
+#define MAX_CLIENTS 100
+#define MAX_THREADS 16
 
 #define SAFE_DELETE_HANDLE(a)  if(a){CloseHandle(a);}
 
 bool InitializeWindowsSockets();
-addrinfo* InitializeListenSocket(addrinfo * resultingAddress, SOCKET * listenSocket);
-bool BindListenSocket(SOCKET * listenSocket, addrinfo * resultingAddress);
-void SetNonBlocking(SOCKET * listenSocket, fd_set readfds);
+bool InitializeListenSocket(addrinfo * resultingAddress, SOCKET listenSocket);
+bool BindListenSocket(SOCKET listenSocket, addrinfo * resultingAddress);
+void SetNonBlocking(SOCKET listenSocket, fd_set readfds);
 
 int Init(METADATA*, addrinfo * resultingAddress);
 
@@ -56,14 +56,7 @@ bool InitCriticalSections(CRITICAL_SECTION CSAnalogData, CRITICAL_SECTION CSStat
 
 DWORD WINAPI DoWork(LPVOID);
 DWORD WINAPI InitWorkerThreads(LPVOID);
-bool Work(int i, METADATA * mData);
-
-NODE* statusData = NULL;
-NODE* analogData = NULL;
-NODE* statusSubscribers = NULL;
-NODE* analogSubscribers = NULL;
-NODE* workerTasks = NULL;
-
+bool Work(int);
 
 
 int main()
@@ -84,7 +77,11 @@ int main()
 
     //NODE* publisherList = NULL;
     //NODE* subscriberList = NULL;
-
+    NODE* statusData = NULL;
+    NODE* analogData = NULL;
+    NODE* statusSubscribers = NULL;
+    NODE* analogSubscribers = NULL;
+    NODE* workerTasks = NULL;
 
 
     HANDLE listenHandle;
@@ -92,19 +89,7 @@ int main()
     HANDLE workerHandles[MAX_THREADS];
 
     //TODO DEFINISI METADATU
-    METADATA* mData = (METADATA*)malloc(sizeof(METADATA));
-
-    mData->readfds = readfds;
-    mData->listenHandle = &listenHandle;
-    mData->workerManagerHandle = &workerManagerHandle;
-    mData->workerHandles = workerHandles;
-    mData->listenSocket = &listenSocket;
-    mData->acceptedSockets = acceptedSockets;
-    mData->CSAnalogData = &CSAnalogData;
-    mData->CSStatusData = &CSStatusData;
-    mData->CSStatusSubs = &CSStatusSubs;
-    mData->CSAnalogSubs = &CSAnalogSubs;
-
+    METADATA* mData = NULL;
 
     DWORD listenID;
     DWORD workerID;
@@ -118,8 +103,8 @@ int main()
 
     printf("Server live and ready to listen\n");
     
-    listenHandle        = CreateThread(NULL, 0, &Listen, mData, 0, &listenID);
-    workerManagerHandle = CreateThread(NULL, 0, &InitWorkerThreads, mData, 0, &workerID);
+    listenHandle        = CreateThread(NULL, 0, &Listen, (LPVOID)0, 0, &listenID);
+    workerManagerHandle = CreateThread(NULL, 0, &InitWorkerThreads, workerHandles, 0, &workerID);
 
     printf("Service running, press 'q' for shutdown\n");
     while (true) {
@@ -129,9 +114,6 @@ int main()
             break;
         }
     }
-
-
-    free(mData);
     return 0;
 }
 
@@ -147,14 +129,14 @@ int Init(METADATA *mData, addrinfo* resultingAddress) {
     //HANDLE listenHandle = mData->listenHandle;
     //HANDLE workerManagerHandle = mData->workerManagerHandle;
     //HANDLE* workerHandles = mData->workerHandles;
-    SOCKET *listenSocket = mData->listenSocket;
+    SOCKET listenSocket = mData->listenSocket;
     SOCKET* acceptedSockets = mData->acceptedSockets;
 
     CRITICAL_SECTION CSWorkerTasks = mData->CSWorkerTasks;
-    CRITICAL_SECTION CSStatusData = *(mData->CSStatusData);
-    CRITICAL_SECTION CSAnalogData = *(mData->CSAnalogData);
-    CRITICAL_SECTION CSStatusSubs = *(mData->CSStatusSubs);
-    CRITICAL_SECTION CSAnalogSubs = *(mData->CSAnalogSubs);
+    CRITICAL_SECTION CSStatusData = mData->CSStatusData;
+    CRITICAL_SECTION CSAnalogData = mData->CSAnalogData;
+    CRITICAL_SECTION CSStatusSubs = mData->CSStatusSubs;
+    CRITICAL_SECTION CSAnalogSubs = mData->CSAnalogSubs;
 
     //NODE* statusData = mData->statusData;
     //NODE* analogData = mData->analogData;
@@ -169,7 +151,9 @@ int Init(METADATA *mData, addrinfo* resultingAddress) {
     }
 
 
-    resultingAddress = InitializeListenSocket(resultingAddress, listenSocket);
+    if (InitializeListenSocket(resultingAddress, listenSocket) == false) {
+        return 2;
+    }
 
     if (BindListenSocket(listenSocket, resultingAddress) == false) {
         return 3;
@@ -196,13 +180,10 @@ int Init(METADATA *mData, addrinfo* resultingAddress) {
 * No argument needed.
 */
 DWORD WINAPI InitWorkerThreads(LPVOID params) {
-
-    METADATA * mData = (METADATA*)params;
-
-    HANDLE* workerHandles = mData->workerHandles;
+    HANDLE* workerHandles = (HANDLE*)params;
 
     for (int i = 0; i < MAX_THREADS; ++i) {
-        workerHandles[i] = CreateThread(NULL, 0, &DoWork, mData, 0, NULL);
+        workerHandles[i] = CreateThread(NULL, 0, &DoWork, (LPVOID)0, 0, NULL);
         if (workerHandles[i] == 0) {
             printf("WorkerManager failed at creating a worker thread.");
             return false;
@@ -243,10 +224,11 @@ DWORD WINAPI Listen(LPVOID param) {
 
     fd_set readfds = mData->readfds;
 
+    NODE* workerTasks = mData->workerTasks;
     //HANDLE listenHandle = mData->listenHandle;
     //HANDLE workerManagerHandle = mData->workerManagerHandle;
     //HANDLE* workerHandles = mData->workerHandles;
-    SOCKET listenSocket = *mData->listenSocket;
+    SOCKET listenSocket = mData->listenSocket;
     SOCKET* acceptedSockets = mData->acceptedSockets;
 
     CRITICAL_SECTION CSWorkerTasks = mData->CSWorkerTasks;
@@ -291,7 +273,7 @@ DWORD WINAPI Listen(LPVOID param) {
             //pass...
         }
         else if (value == SOCKET_ERROR) {
-            printf("[DEBUG] select failed with error: %d\ncontinueing...\n", WSAGetLastError());
+            //printf("[DEBUG] select failed with error: %d\ncontinueing...\n", WSAGetLastError());
             continue;
         }
         else { //accept event
@@ -334,13 +316,20 @@ bool Work(int i, METADATA *mData) {
     HANDLE listenHandle = mData->listenHandle;
     HANDLE workerManagerHandle = mData->workerManagerHandle;
     HANDLE* workerHandles = mData->workerHandles;
+    SOCKET listenSocket = mData->listenSocket;
     SOCKET* acceptedSockets = mData->acceptedSockets;
 
-    CRITICAL_SECTION CSStatusData = *(mData->CSStatusData);
-    CRITICAL_SECTION CSAnalogData = *(mData->CSAnalogData);
-    CRITICAL_SECTION CSStatusSubs = *(mData->CSStatusSubs);
-    CRITICAL_SECTION CSAnalogSubs = *(mData->CSAnalogSubs);
+    CRITICAL_SECTION CSStatusData = mData->CSStatusData;
+    CRITICAL_SECTION CSAnalogData = mData->CSAnalogData;
+    CRITICAL_SECTION CSStatusSubs = mData->CSStatusSubs;
+    CRITICAL_SECTION CSAnalogSubs = mData->CSAnalogSubs;
     CRITICAL_SECTION CSWorkerTasks = mData->CSWorkerTasks;
+
+    NODE* statusData = mData->statusData;
+    NODE* analogData = mData->analogData;
+    NODE* statusSubscribers = mData->statusSubscribers;
+    NODE* analogSubscribers = mData->analogSubscribers;
+    NODE* workerTasks = mData->workerTasks;
 
 
     char* data = (char*)malloc(sizeof(Measurment));
@@ -408,14 +397,14 @@ bool Work(int i, METADATA *mData) {
 /*
 * Set up the socket to accept non-blocking TCP mode.
 */
-void SetNonBlocking(SOCKET *listenSocket, fd_set readfds) {
+void SetNonBlocking(SOCKET listenSocket, fd_set readfds) {
     unsigned long mode = 1;
 
-    int iResult = ioctlsocket(*listenSocket, FIONBIO, &mode);
+    int iResult = ioctlsocket(listenSocket, FIONBIO, &mode);
 
     FD_ZERO(&readfds);
 
-    FD_SET(*listenSocket, &readfds);
+    FD_SET(listenSocket, &readfds);
 }
 
 /*
@@ -436,7 +425,7 @@ bool InitializeWindowsSockets()
 /*
 * Sets up listening socket.
 */
-addrinfo* InitializeListenSocket(addrinfo* resultingAddress, SOCKET *listenSocket) {
+bool InitializeListenSocket(addrinfo* resultingAddress, SOCKET listenSocket) {
     addrinfo hints;
 
     memset(&hints, 0, sizeof(hints));
@@ -450,32 +439,32 @@ addrinfo* InitializeListenSocket(addrinfo* resultingAddress, SOCKET *listenSocke
     {
         printf("getaddrinfo failed with error: %d\n", iResult);
         WSACleanup();
-        return NULL;
+        return false;
     }
 
-    *listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-    if (*listenSocket == INVALID_SOCKET)
+    if (listenSocket == INVALID_SOCKET)
     {
         printf("socket failed with error: %ld\n", WSAGetLastError());
         freeaddrinfo(resultingAddress);
         WSACleanup();
-        return NULL;
+        return false;
     }
 
-    return resultingAddress;
+    return true;
 }
 
 /*
 * Binds listening socket with the configured address and port.
 */
-bool BindListenSocket(SOCKET *listenSocket, addrinfo * resultingAddress) {
-    int iResult = bind(*listenSocket, resultingAddress->ai_addr, (int)resultingAddress->ai_addrlen);
+bool BindListenSocket(SOCKET listenSocket, addrinfo * resultingAddress) {
+    int iResult = bind(listenSocket, resultingAddress->ai_addr, (int)resultingAddress->ai_addrlen);
     if (iResult == SOCKET_ERROR)
     {
         printf("bind failed with error: %d\n", WSAGetLastError());
         freeaddrinfo(resultingAddress);
-        closesocket(*listenSocket);
+        closesocket(listenSocket);
         WSACleanup();
         return false;
     }
@@ -523,8 +512,8 @@ void ProcessMessages(fd_set readfds, CRITICAL_SECTION CSWorkerTasks, NODE* worke
 */
 void ProcessMeasurment(Measurment *m, CRITICAL_SECTION CSAnalogData, CRITICAL_SECTION CSStatusData, NODE * analogData, NODE * analogSubscribers,
                        NODE * statusData, NODE * statusSubscribers) {
-    printf("[DEBUG] Service received: ");
-    PrintMeasurment(m);
+    //printf("[DEBUG] Service received: ");
+    //PrintMeasurment(m);
 
     switch (m->topic)
     {
@@ -555,15 +544,20 @@ void Shutdown(METADATA *mData) {
     HANDLE listenHandle = mData->listenHandle;
     HANDLE workerManagerHandle = mData->workerManagerHandle;
     HANDLE* workerHandles = mData->workerHandles;
-    SOCKET listenSocket = *(mData->listenSocket);
+    SOCKET listenSocket = mData->listenSocket;
     SOCKET* acceptedSockets = mData->acceptedSockets;
 
-    CRITICAL_SECTION CSStatusData = *(mData->CSStatusData);
-    CRITICAL_SECTION CSAnalogData = *(mData->CSAnalogData);
-    CRITICAL_SECTION CSStatusSubs = *(mData->CSStatusSubs);
-    CRITICAL_SECTION CSAnalogSubs = *(mData->CSAnalogSubs);
+    CRITICAL_SECTION CSStatusData = mData->CSStatusData;
+    CRITICAL_SECTION CSAnalogData = mData->CSAnalogData;
+    CRITICAL_SECTION CSStatusSubs = mData->CSStatusSubs;
+    CRITICAL_SECTION CSAnalogSubs = mData->CSAnalogSubs;
     CRITICAL_SECTION CSWorkerTasks = mData->CSWorkerTasks;
 
+    NODE* statusData = mData->statusData;
+    NODE* analogData = mData->analogData;
+    NODE* statusSubscribers = mData->statusSubscribers;
+    NODE* analogSubscribers = mData->analogSubscribers;
+    NODE* workerTasks = mData->workerTasks;
 
     printf("[INFO] Shuting down..\n");
 
@@ -678,6 +672,7 @@ DWORD WINAPI DoWork(LPVOID params) {
 
     METADATA* mData = (METADATA*)params;
 
+    NODE* workerTasks = mData->workerTasks;
     CRITICAL_SECTION CSWorkerTasks = mData->CSWorkerTasks;
 
     bool execute = false;
