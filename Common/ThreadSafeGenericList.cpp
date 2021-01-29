@@ -72,6 +72,7 @@ void FreeGenericList(NODE** head) {
         (*head)->mutex,    // handle to mutex
         INFINITE);  // no time-out interval
     if (dwWaitResult == WAIT_OBJECT_0) {
+        CloseHandle((*head)->mutex);
         free((*head)->data);
         (*head)->data = NULL;
         (*head)->next = NULL;
@@ -118,6 +119,7 @@ bool DeleteNode(NODE** head, void* toDelete, size_t size) {
                 return true;
             }
             ReleaseMutex(current->mutex);
+            CloseHandle(current->mutex);
             prev = current;
             current = current->next;
         }
