@@ -15,23 +15,17 @@ typedef struct worker_data {
 typedef struct service_metadata {
 	fd_set readfds;
 
-	HANDLE listenHandle;
-	HANDLE workerManagerHandle;
+	HANDLE *listenHandle;
+	HANDLE *workerManagerHandle;
 	HANDLE* workerHandles;
-	SOCKET listenSocket;
+	SOCKET *listenSocket;
 	SOCKET* acceptedSockets;
 
-	CRITICAL_SECTION CSStatusData;
-	CRITICAL_SECTION CSAnalogData;
-	CRITICAL_SECTION CSStatusSubs;
-	CRITICAL_SECTION CSAnalogSubs;
+	CRITICAL_SECTION *CSStatusData;
+	CRITICAL_SECTION *CSAnalogData;
+	CRITICAL_SECTION *CSStatusSubs;
+	CRITICAL_SECTION *CSAnalogSubs;
 	CRITICAL_SECTION CSWorkerTasks;
-
-	NODE* statusData;
-	NODE* analogData;
-	NODE* statusSubscribers;
-	NODE* analogSubscribers;
-	NODE* workerTasks;
 
 }METADATA;
 
