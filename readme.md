@@ -32,14 +32,9 @@ Sistem se sastoji od tri odvojena entiteta. Prva je servis - PubSubEngine. Servi
 
 ![2.png](https://i.postimg.cc/3JNXMBqS/2.png)
 
-## Logika niti
-Pokrenuta je nit za preslušavanje kako bi mogla da preuzme veze klijenta i sačuva ih na listama klijenata.
-Spiskovi klijenata su:
-```c
-NODE * publisherList = NULL;
-NODE * subscriberList = NULL;
-```
-/// DEJO OPISATI
+## Thread Pool
+
+U okviru servisa se prilikom inicijalizacije započne rad konfigurisanog broja radnih niti. Ove niti su u aktivnom stanju tokom celog rada servisa. Definisana je struktura lista zadataka koju niti periodično proveravaju i u slučaju da postoji zadatak (dogadjaj na klijentu), nit ga preuzima i započinje njegovo izvršavanje. Tokom preuzimanja novog zahteva niti se moraju sinhronizovati da ne bi došlo do situacije da više niti preuzme na sebe isti zadatak, a nakon preuzetog zadatka je moguće njihovo potpuno paralelno izvršavanje. Ako ne postoji zadatak za neku nit, ona će se pauzirati na neko prekonfigurisano vreme da bi omogućila procesoru da izvrši zamenu konteksta.
 
 ## Strukture podataka
 ### Struktura merenja
