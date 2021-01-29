@@ -458,15 +458,6 @@ void ProcessMeasurment(Measurment *m) {
 void Shutdown() {
     printf("[INFO] Shuting down..\n");
 
-    printf("[INFO] Closing all sockets..\n");
-    closesocket(listenSocket);
-    for (int i = 0; i < MAX_CLIENTS; ++i) {
-        if (acceptedSockets[i] != INVALID_SOCKET) {
-            closesocket(acceptedSockets[i]);
-        }
-    }
-    WSACleanup();
-    printf("[INFO] Done\n");
 
 
 
@@ -481,7 +472,7 @@ void Shutdown() {
     //create special tasks that worker recognize as termination signals
     WorkerData* terminate = (WorkerData*)malloc(sizeof(WorkerData));
     terminate->i = WORKER_TERMINATE;
-    for (int i = 0; i < MAX_THREADS; ++i) {
+    for (int i = 0; i < MAX_THREADS * 3; ++i) {
         GenericListPushAtStart(&workerTasks, terminate, sizeof(WorkerData));
     }
     free(terminate);
@@ -517,6 +508,17 @@ void Shutdown() {
     FreeGenericList(&analogSubscribers);
     FreeGenericList(&workerTasks);
     printf("[INFO] Done\n");
+
+    printf("[INFO] Closing all sockets..\n");
+    closesocket(listenSocket);
+    for (int i = 0; i < MAX_CLIENTS; ++i) {
+        if (acceptedSockets[i] != INVALID_SOCKET) {
+            closesocket(acceptedSockets[i]);
+        }
+    }
+    WSACleanup();
+    printf("[INFO] Done\n");
+
 
     printf("[INFO] Service freed all memory.\n");
     getchar();
